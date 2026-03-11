@@ -64,6 +64,35 @@ const statusConfig = {
     rejected: { variant: 'destructive' as const, label: 'Rejected' },
 };
 
+function getReviewerLabel(request: AdminRoomRequest): string {
+    if (request.reviewer !== null) {
+        return request.reviewer.name;
+    }
+
+    if (request.status === 'rejected') {
+        const requestDate = new Date(request.date);
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+        if (!Number.isNaN(requestDate.getTime())) {
+            const requestDay = new Date(
+                requestDate.getFullYear(),
+                requestDate.getMonth(),
+                requestDate.getDate(),
+            );
+
+            if (requestDay < today) {
+                return 'Rejected (system)';
+            }
+        }
+
+        return 'Rejected';
+    }
+
+    return 'Awaiting review';
+}
+
 export default function AdminRequests({
     roomRequests,
 }: {
@@ -174,10 +203,7 @@ export default function AdminRequests({
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-sm text-muted-foreground">
-                                            {request.reviewer?.name ??
-                                                (request.status === 'rejected'
-                                                    ? 'Automatically expired'
-                                                    : 'Awaiting review')}
+                                            {getReviewerLabel(request)}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {request.status === 'pending' ? (
