@@ -17,7 +17,7 @@ class RegisterController extends Controller
         return Inertia::render('auth/register');
     }
 
-    public function __invoke(RegisterRequest $request): RedirectResponse
+    public function store(RegisterRequest $request): RedirectResponse
     {
         $user = User::create($request->validated());
         $user->assignRole('authenticated');
