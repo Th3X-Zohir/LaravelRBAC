@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ApproveRoomRequest;
+use App\Http\Requests\ApproveRoomRequestRequest;
+use App\Http\Requests\CancelRoomRequestRequest;
+use App\Http\Requests\RejectRoomRequestRequest;
 use App\Http\Requests\StoreRoomRequestRequest;
 use App\Models\RoomRequest;
 use App\Models\User;
@@ -9,7 +13,6 @@ use App\Notifications\RoomRequestNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -38,9 +41,7 @@ class RoomRequestController extends Controller
      */
     public function show(Request $request, RoomRequest $roomRequest): Response
     {
-        if ($roomRequest->user_id !== $request->user()->id) {
-            abort(403, 'You can only view your own requests.');
-        }
+        $this->authorize('view', $roomRequest);
 
         $roomRequest->load(['room', 'user', 'reviewer']);
 
@@ -72,16 +73,8 @@ class RoomRequestController extends Controller
     /**
      * Cancel a pending room request (own request only).
      */
-    public function cancel(Request $request, RoomRequest $roomRequest): RedirectResponse
+    public function cancel(CancelRoomRequestRequest $request, RoomRequest $roomRequest): RedirectResponse
     {
-        if ($roomRequest->user_id !== $request->user()->id) {
-            abort(403, 'You can only cancel your own requests.');
-        }
-
-        if ($roomRequest->status !== 'pending') {
-            return back()->withErrors(['status' => 'Only pending requests can be cancelled.']);
-        }
-
         $roomRequest->delete();
 
         return back()->with('success', 'Room request cancelled.');
@@ -117,69 +110,13 @@ class RoomRequestController extends Controller
     /**
      * Approve a room request (superadmin only).
      */
-    public function approve(Request $request, RoomRequest $roomRequest): RedirectResponse
+    public function approve(ApproveRoomRequestRequest $request, RoomRequest $roomRequest): RedirectResponse
     {
         try {
-            [$approvedRequest, $autoRejectedRequests] = DB::transaction(function () use ($request, $roomRequest): array {
-                $lockedRequest = RoomRequest::query()
-                    ->with(['room', 'user'])
-                    ->lockForUpdate()
-                    ->findOrFail($roomRequest->id);
-
-                if ($lockedRequest->status !== 'pending') {
-                    throw ValidationException::withMessages([
-                        'status' => 'Only pending requests can be approved.',
-                    ]);
-                }
-
-                $overlappingRequests = RoomRequest::query()
-                    ->with(['room', 'user'])
-                    ->where('room_id', $lockedRequest->room_id)
-                    ->whereDate('date', $lockedRequest->date->toDateString())
-                    ->whereIn('status', ['pending', 'approved'])
-                    ->overlapping($lockedRequest->start_time, $lockedRequest->end_time)
-                    ->lockForUpdate()
-                    ->get();
-
-                $hasConflict = $overlappingRequests
-                    ->where('status', 'approved')
-                    ->where('id', '!=', $lockedRequest->id)
-                    ->isNotEmpty();
-
-                if ($hasConflict) {
-                    throw ValidationException::withMessages([
-                        'status' => 'This time slot has already been approved for that room and date.',
-                    ]);
-                }
-
-                $reviewedAt = now();
-
-                $lockedRequest->forceFill([
-                    'status' => 'approved',
-                    'reviewed_by' => $request->user()->id,
-                    'reviewed_at' => $reviewedAt,
-                ])->save();
-
-                $autoRejectedRequests = $overlappingRequests
-                    ->where('status', 'pending')
-                    ->where('id', '!=', $lockedRequest->id)
-                    ->values();
-
-                $autoRejectedRequests->each(function (RoomRequest $pendingRequest) use ($request, $reviewedAt): void {
-                    $pendingRequest->forceFill([
-                        'status' => 'rejected',
-                        'reviewed_by' => $request->user()->id,
-                        'reviewed_at' => $reviewedAt,
-                    ])->save();
-                });
-
-                $refreshedAutoRejectedRequests = RoomRequest::query()
-                    ->with(['room', 'user'])
-                    ->whereKey($autoRejectedRequests->modelKeys())
-                    ->get();
-
-                return [$lockedRequest->fresh(['room', 'user']), $refreshedAutoRejectedRequests];
-            });
+            [$approvedRequest, $autoRejectedRequests] = app(ApproveRoomRequest::class)(
+                $request->user(),
+                $roomRequest,
+            );
         } catch (ValidationException $exception) {
             return back()->withErrors($exception->errors());
         }
@@ -193,12 +130,8 @@ class RoomRequestController extends Controller
     /**
      * Reject a room request (superadmin only).
      */
-    public function reject(Request $request, RoomRequest $roomRequest): RedirectResponse
+    public function reject(RejectRoomRequestRequest $request, RoomRequest $roomRequest): RedirectResponse
     {
-        if ($roomRequest->status !== 'pending') {
-            return back()->withErrors(['status' => 'Only pending requests can be rejected.']);
-        }
-
         $roomRequest->update([
             'status' => 'rejected',
             'reviewed_by' => $request->user()->id,
