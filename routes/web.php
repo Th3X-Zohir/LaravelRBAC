@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Route;
 // ── Guest (auth) routes ─────────────────────────────────────────
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', LoginController::class);
+    Route::post('/login', [LoginController::class, 'store']);
 
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
-    Route::post('/register', RegisterController::class);
+    Route::post('/register', [RegisterController::class, 'store']);
 });
 
 Route::redirect('/', '/rooms');
