@@ -57,7 +57,17 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request): Response|RedirectResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $user = $request->user();
+
+        if ($user !== null) {
+            DatabaseNotification::query()
+                ->where('notifiable_id', $user->getKey())
+                ->where('notifiable_type', $user::class)
+                ->whereNull('read_at')
+                ->update([
+                    'read_at' => now(),
+                ]);
+        }
 
         if ($request->expectsJson()) {
             return response()->noContent();
