@@ -7,13 +7,12 @@ use App\Http\Requests\ShowRoomAvailabilityRequest;
 use App\Models\Room;
 use App\Models\RoomRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RoomController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
         return Inertia::render('rooms/index', [
             'slots' => RoomRequest::availableSlots(),
