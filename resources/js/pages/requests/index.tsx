@@ -252,6 +252,9 @@ export default function Requests({
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
+                                                                nativeButton={
+                                                                    false
+                                                                }
                                                                 render={
                                                                     <Link
                                                                         href={show.url(
@@ -280,6 +283,7 @@ export default function Requests({
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
+                                                            nativeButton={false}
                                                             render={
                                                                 <Link
                                                                     href={show.url(
