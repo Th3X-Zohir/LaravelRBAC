@@ -15,7 +15,7 @@ class LoginController extends Controller
         return Inertia::render('auth/login');
     }
 
-    public function __invoke(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
