@@ -22,9 +22,12 @@ Route::middleware('guest')->group(function (): void {
 
 Route::redirect('/', '/rooms');
 
-Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
-Route::get('/rooms/search', [RoomController::class, 'search'])->name('rooms.search');
-Route::get('/rooms/{room}/slots', [RoomController::class, 'slots'])->name('rooms.slots');
+// Public: browse room availability (no auth required)
+Route::prefix('rooms')->name('rooms.')->group(function (): void {
+    Route::get('/', [RoomController::class, 'index'])->name('index');
+    Route::get('/search', [RoomController::class, 'search'])->name('search');
+    Route::get('/{room}/slots', [RoomController::class, 'slots'])->name('slots');
+});
 
 // ── Authenticated routes ────────────────────────────────────────
 Route::middleware('auth')->group(function (): void {
@@ -33,7 +36,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/requests', [RoomRequestController::class, 'index'])->name('requests.index');
     Route::get('/requests/{roomRequest}', [RoomRequestController::class, 'show'])->name('requests.show');
 
-    // Room request actions (cr role — authorization handled in FormRequest)
+    // Room request actions (authorization: store via FormRequest; show/cancel/approve/reject via Policy + FormRequest)
     Route::post('/requests', [RoomRequestController::class, 'store'])->name('requests.store');
     Route::delete('/requests/{roomRequest}', [RoomRequestController::class, 'cancel'])->name('requests.cancel');
 
