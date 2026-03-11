@@ -211,6 +211,7 @@ export default function AdminRequests({
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
+                                                        nativeButton={false}
                                                         render={
                                                             <Link
                                                                 href={adminShow.url(
