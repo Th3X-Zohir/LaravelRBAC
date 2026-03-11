@@ -12,6 +12,14 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { index as adminUsersIndex } from '@/actions/App/Http/Controllers/Admin/UserController';
+import Logout from '@/actions/App/Http/Controllers/Auth/LogoutController';
+import { index as dashboard } from '@/actions/App/Http/Controllers/DashboardController';
+import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
+import {
+    adminIndex as adminRequestsIndex,
+    index as requestsIndex,
+} from '@/actions/App/Http/Controllers/RoomRequestController';
 import NotificationModal from '@/components/notification-modal';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -35,14 +43,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Auth } from '@/types';
-import { index as adminUsersIndex } from '@/actions/App/Http/Controllers/Admin/UserController';
-import { index as dashboard } from '@/actions/App/Http/Controllers/DashboardController';
-import Logout from '@/actions/App/Http/Controllers/Auth/LogoutController';
-import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
-import {
-    adminIndex as adminRequestsIndex,
-    index as requestsIndex,
-} from '@/actions/App/Http/Controllers/RoomRequestController';
 
 type NavItem = {
     label: string;

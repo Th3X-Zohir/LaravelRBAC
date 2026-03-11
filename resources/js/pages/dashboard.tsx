@@ -10,6 +10,8 @@ import {
     Users,
 } from 'lucide-react';
 
+import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
+import { adminIndex as adminRequestsIndex } from '@/actions/App/Http/Controllers/RoomRequestController';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -30,8 +32,6 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { formatDate, formatTime } from '@/lib/utils';
 import type { Auth } from '@/types';
-import { adminIndex as adminRequestsIndex } from '@/actions/App/Http/Controllers/RoomRequestController';
-import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
 
 type Stats = {
     total_rooms: number;

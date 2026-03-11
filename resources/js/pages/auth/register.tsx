@@ -2,6 +2,8 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { DoorOpen } from 'lucide-react';
 import type { FormEventHandler } from 'react';
 
+import { show as loginShow } from '@/actions/App/Http/Controllers/Auth/LoginController';
+import { show as registerShow } from '@/actions/App/Http/Controllers/Auth/RegisterController';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -13,8 +15,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import GuestLayout from '@/layouts/guest-layout';
-import Login from '@/actions/App/Http/Controllers/Auth/LoginController';
-import Register from '@/actions/App/Http/Controllers/Auth/RegisterController';
 
 export default function Register() {
     const { data, setData, post, processing, errors } = useForm({
@@ -26,7 +26,7 @@ export default function Register() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(Register.url());
+        post(registerShow.url());
     };
 
     return (
@@ -164,7 +164,7 @@ export default function Register() {
                 <p className="text-center text-sm text-muted-foreground">
                     Already have an account?{' '}
                     <Link
-                        href={Login.url()}
+                        href={loginShow.url()}
                         className="font-medium text-foreground underline-offset-4 hover:underline"
                     >
                         Sign in

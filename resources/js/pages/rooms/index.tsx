@@ -11,8 +11,12 @@ import {
 import type { FormEvent, ReactNode } from 'react';
 import useSWR from 'swr';
 
+import { show as loginShow } from '@/actions/App/Http/Controllers/Auth/LoginController';
+import { show as registerShow } from '@/actions/App/Http/Controllers/Auth/RegisterController';
 import { search } from '@/actions/App/Http/Controllers/RoomController';
+import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
 import { store } from '@/actions/App/Http/Controllers/RoomRequestController';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,13 +44,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ThemeToggle } from '@/components/theme-toggle';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/utils';
 import type { Auth, User } from '@/types';
-import Login from '@/actions/App/Http/Controllers/Auth/LoginController';
-import Register from '@/actions/App/Http/Controllers/Auth/RegisterController';
-import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
 
 type Room = {
     id: number;
@@ -129,7 +129,7 @@ function RoomAvailabilityShell({
                             variant="outline"
                             size="sm"
                             nativeButton={false}
-                            render={<Link href={Login.url()} />}
+                            render={<Link href={loginShow.url()} />}
                         >
                             <LogIn className="size-3.5" />
                             Sign in
@@ -137,7 +137,7 @@ function RoomAvailabilityShell({
                         <Button
                             size="sm"
                             nativeButton={false}
-                            render={<Link href={Register.url()} />}
+                            render={<Link href={registerShow.url()} />}
                         >
                             <UserPlus className="size-3.5" />
                             Register
