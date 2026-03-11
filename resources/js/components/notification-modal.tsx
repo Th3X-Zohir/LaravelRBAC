@@ -1,4 +1,4 @@
-import { Link, router, usePage, usePoll } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     Bell,
     BellOff,
@@ -7,9 +7,11 @@ import {
     Info,
     XCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 
 import {
+    index as notificationsIndex,
     markAllAsRead as markAllNotificationsAsRead,
     visit,
 } from '@/actions/App/Http/Controllers/NotificationController';
@@ -47,6 +49,50 @@ const typeConfig = {
         bg: 'bg-amber-50 dark:bg-amber-950/50',
     },
 } as const;
+
+function readCookie(name: string): string | null {
+    const encodedName = `${encodeURIComponent(name)}=`;
+    const cookie = document.cookie
+        .split('; ')
+        .find((entry) => entry.startsWith(encodedName));
+
+    if (cookie === undefined) {
+        return null;
+    }
+
+    return decodeURIComponent(cookie.slice(encodedName.length));
+}
+
+async function fetchNotifications(url: string): Promise<Notifications> {
+    const response = await fetch(url, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Unable to load notifications.');
+    }
+
+    return (await response.json()) as Notifications;
+}
+
+async function postMarkAllNotificationsAsRead(): Promise<void> {
+    const csrfToken = readCookie('XSRF-TOKEN');
+    const response = await fetch(markAllNotificationsAsRead.url(), {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            ...(csrfToken === null ? {} : { 'X-XSRF-TOKEN': csrfToken }),
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Unable to mark notifications as read.');
+    }
+}
 
 function NotificationRow({
     notification,
@@ -94,22 +140,57 @@ function NotificationRow({
 }
 
 export default function NotificationModal() {
-    const { notifications } = usePage<{ notifications: Notifications }>().props;
+    const { notifications: sharedNotifications } = usePage<{
+        notifications: Notifications;
+    }>().props;
     const [open, setOpen] = useState(false);
+    const [isMarkingAllAsRead, setIsMarkingAllAsRead] = useState(false);
 
-    // Poll every 5 seconds to refresh shared props (including notifications)
-    usePoll(5000, {
-        only: ['notifications'],
+    const {
+        data: notifications = sharedNotifications,
+        mutate: mutateNotifications,
+    } = useSWR<Notifications>(notificationsIndex.url(), fetchNotifications, {
+        fallbackData: sharedNotifications,
+        refreshInterval: 5000,
+        refreshWhenHidden: false,
+        revalidateOnFocus: false,
     });
+
+    useEffect(() => {
+        void mutateNotifications(sharedNotifications, {
+            revalidate: false,
+        });
+    }, [mutateNotifications, sharedNotifications]);
 
     const { unreadCount = 0, items = [] } = notifications ?? {};
 
-    function handleMarkAllAsRead() {
-        router.post(
-            markAllNotificationsAsRead.url(),
-            {},
-            { only: ['notifications'] },
+    async function handleMarkAllAsRead(): Promise<void> {
+        setIsMarkingAllAsRead(true);
+        await mutateNotifications(
+            (currentNotifications) => ({
+                unreadCount: 0,
+                items: (currentNotifications?.items ?? []).map(
+                    (notification) => ({
+                        ...notification,
+                        read: true,
+                    }),
+                ),
+            }),
+            {
+                revalidate: false,
+            },
         );
+
+        try {
+            await postMarkAllNotificationsAsRead();
+            await mutateNotifications();
+        } catch {
+            await mutateNotifications(sharedNotifications, {
+                revalidate: false,
+            });
+        } finally {
+            setIsMarkingAllAsRead(false);
+        }
     }
 
     return (
@@ -135,6 +216,7 @@ export default function NotificationModal() {
                                 variant="ghost"
                                 size="xs"
                                 onClick={handleMarkAllAsRead}
+                                disabled={isMarkingAllAsRead}
                             >
                                 <CheckCheck className="mr-1 size-3.5" />
                                 Mark all read

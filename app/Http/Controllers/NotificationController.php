@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\RoomRequest;
+use App\Notifications\NotificationData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
@@ -15,14 +17,7 @@ class NotificationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $notifications = $request->user()
-            ->notifications()
-            ->latest()
-            ->limit(30)
-            ->get()
-            ->map(fn ($notification) => $this->transformNotification($notification));
-
-        return response()->json($notifications);
+        return response()->json(NotificationData::forUser($request->user()));
     }
 
     /**
@@ -42,7 +37,7 @@ class NotificationController extends Controller
     /**
      * Mark a single notification as read.
      */
-    public function markAsRead(Request $request, string $id): RedirectResponse
+    public function markAsRead(Request $request, string $id): Response|RedirectResponse
     {
         $notification = $request->user()
             ->notifications()
@@ -50,34 +45,25 @@ class NotificationController extends Controller
 
         $notification->markAsRead();
 
+        if ($request->expectsJson()) {
+            return response()->noContent();
+        }
+
         return back(303);
     }
 
     /**
      * Mark all notifications as read.
      */
-    public function markAllAsRead(Request $request): RedirectResponse
+    public function markAllAsRead(Request $request): Response|RedirectResponse
     {
         $request->user()->unreadNotifications->markAsRead();
 
-        return back(303);
-    }
+        if ($request->expectsJson()) {
+            return response()->noContent();
+        }
 
-    /**
-     * @return array{id: string, title: string, message: string, type: string, read: bool, time: string, created_at: string, visit_url: string}
-     */
-    private function transformNotification(object $notification): array
-    {
-        return [
-            'id' => $notification->id,
-            'title' => $notification->data['title'] ?? '',
-            'message' => $notification->data['message'] ?? '',
-            'type' => $notification->data['type'] ?? 'info',
-            'read' => $notification->read_at !== null,
-            'time' => $notification->created_at->diffForHumans(),
-            'created_at' => $notification->created_at->toISOString(),
-            'visit_url' => route('notifications.visit', $notification->id),
-        ];
+        return back(303);
     }
 
     private function resolveTargetUrl(Request $request, DatabaseNotification $notification): string
