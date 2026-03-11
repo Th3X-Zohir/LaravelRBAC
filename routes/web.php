@@ -9,14 +9,13 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomRequestController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // ── Guest (auth) routes ─────────────────────────────────────────
 Route::middleware('guest')->group(function (): void {
-    Route::get('/login', fn () => Inertia::render('auth/login'))->name('login');
+    Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', LoginController::class);
 
-    Route::get('/register', fn () => Inertia::render('auth/register'))->name('register');
+    Route::get('/register', [RegisterController::class, 'show'])->name('register');
     Route::post('/register', RegisterController::class);
 });
 
