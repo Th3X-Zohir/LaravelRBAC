@@ -44,6 +44,9 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/utils';
 import type { Auth, User } from '@/types';
+import Login from '@/actions/App/Http/Controllers/Auth/LoginController';
+import Register from '@/actions/App/Http/Controllers/Auth/RegisterController';
+import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
 
 type Room = {
     id: number;
@@ -112,7 +115,7 @@ function RoomAvailabilityShell({
             <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-sm">
                 <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:px-6">
                     <Link
-                        href="/rooms"
+                        href={roomsIndex.url()}
                         className="flex items-center gap-2 text-foreground"
                     >
                         <DoorOpen className="size-5" />
@@ -126,7 +129,7 @@ function RoomAvailabilityShell({
                             variant="outline"
                             size="sm"
                             nativeButton={false}
-                            render={<Link href="/login" />}
+                            render={<Link href={Login.url()} />}
                         >
                             <LogIn className="size-3.5" />
                             Sign in
@@ -134,7 +137,7 @@ function RoomAvailabilityShell({
                         <Button
                             size="sm"
                             nativeButton={false}
-                            render={<Link href="/register" />}
+                            render={<Link href={Register.url()} />}
                         >
                             <UserPlus className="size-3.5" />
                             Register

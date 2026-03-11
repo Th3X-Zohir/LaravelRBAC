@@ -35,6 +35,14 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Auth } from '@/types';
+import { index as adminUsersIndex } from '@/actions/App/Http/Controllers/Admin/UserController';
+import { index as dashboard } from '@/actions/App/Http/Controllers/DashboardController';
+import Logout from '@/actions/App/Http/Controllers/Auth/LogoutController';
+import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
+import {
+    adminIndex as adminRequestsIndex,
+    index as requestsIndex,
+} from '@/actions/App/Http/Controllers/RoomRequestController';
 
 type NavItem = {
     label: string;
@@ -81,19 +89,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const navItems: NavItem[] = [
         {
             label: 'Dashboard',
-            href: '/dashboard',
+            href: dashboard.url(),
             icon: <LayoutDashboard className="size-4" />,
             match: '/dashboard',
         },
         {
             label: 'Rooms',
-            href: '/rooms',
+            href: roomsIndex.url(),
             icon: <Search className="size-4" />,
             match: '/rooms',
         },
         {
             label: 'My Requests',
-            href: '/requests',
+            href: requestsIndex.url(),
             icon: <CalendarCheck className="size-4" />,
             match: '/requests',
         },
@@ -101,13 +109,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             ? [
                   {
                       label: 'Manage Users',
-                      href: '/admin/users',
+                      href: adminUsersIndex.url(),
                       icon: <Users className="size-4" />,
                       match: '/admin/users',
                   },
                   {
                       label: 'Manage Requests',
-                      href: '/admin/requests',
+                      href: adminRequestsIndex.url(),
                       icon: <ClipboardCheck className="size-4" />,
                       match: '/admin/requests',
                   },
@@ -116,7 +124,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     ];
 
     function logout(): void {
-        router.post('/logout');
+        router.post(Logout.url());
     }
 
     return (
@@ -124,7 +132,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
                 <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:px-6">
                     <Link
-                        href="/dashboard"
+                        href={dashboard.url()}
                         className="flex shrink-0 items-center gap-2 text-foreground"
                     >
                         <DoorOpen className="size-5" />

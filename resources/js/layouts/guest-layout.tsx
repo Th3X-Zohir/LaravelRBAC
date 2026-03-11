@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { DoorOpen } from 'lucide-react';
+import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function GuestLayout({
@@ -12,7 +13,7 @@ export default function GuestLayout({
             {/* Minimal top bar */}
             <header className="flex h-14 items-center border-b px-6">
                 <Link
-                    href="/rooms"
+                    href={roomsIndex.url()}
                     className="flex items-center gap-2 text-foreground"
                 >
                     <DoorOpen className="size-5" />

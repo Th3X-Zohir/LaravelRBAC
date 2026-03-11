@@ -13,6 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import GuestLayout from '@/layouts/guest-layout';
+import Login from '@/actions/App/Http/Controllers/Auth/LoginController';
+import Register from '@/actions/App/Http/Controllers/Auth/RegisterController';
 
 export default function Register() {
     const { data, setData, post, processing, errors } = useForm({
@@ -24,7 +26,7 @@ export default function Register() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post('/register');
+        post(Register.url());
     };
 
     return (
@@ -162,7 +164,7 @@ export default function Register() {
                 <p className="text-center text-sm text-muted-foreground">
                     Already have an account?{' '}
                     <Link
-                        href="/login"
+                        href={Login.url()}
                         className="font-medium text-foreground underline-offset-4 hover:underline"
                     >
                         Sign in

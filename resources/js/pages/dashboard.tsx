@@ -30,6 +30,8 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { formatDate, formatTime } from '@/lib/utils';
 import type { Auth } from '@/types';
+import { adminIndex as adminRequestsIndex } from '@/actions/App/Http/Controllers/RoomRequestController';
+import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
 
 type Stats = {
     total_rooms: number;
@@ -175,7 +177,7 @@ export default function Dashboard({
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Link
-                            href="/rooms"
+                            href={roomsIndex.url()}
                             className={buttonVariants({ size: 'sm' })}
                         >
                             <Search className="size-3.5" />
@@ -183,7 +185,7 @@ export default function Dashboard({
                         </Link>
                         {isSuperadmin && (
                             <Link
-                                href="/admin/requests"
+                                href={adminRequestsIndex.url()}
                                 className={buttonVariants({
                                     size: 'sm',
                                     variant: 'outline',
