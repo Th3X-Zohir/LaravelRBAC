@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\RoomRequest;
+use App\Services\RoomService;
 use Illuminate\Console\Command;
 
 class RejectExpiredRoomRequests extends Command
@@ -24,15 +24,9 @@ class RejectExpiredRoomRequests extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle(RoomService $roomService): int
     {
-        $rejectedCount = RoomRequest::query()
-            ->where('status', 'pending')
-            ->whereDate('date', '<', today()->toDateString())
-            ->update([
-                'status' => 'rejected',
-                'reviewed_at' => now(),
-            ]);
+        $rejectedCount = $roomService->rejectExpiredRequests();
 
         $this->info("Rejected {$rejectedCount} expired pending room request(s).");
 

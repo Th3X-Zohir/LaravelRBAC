@@ -2,18 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\ApproveRoomRequest;
 use App\Http\Requests\ApproveRoomRequestRequest;
 use App\Http\Requests\CancelRoomRequestRequest;
 use App\Http\Requests\RejectRoomRequestRequest;
 use App\Http\Requests\StoreRoomRequestRequest;
 use App\Models\RoomRequest;
-use App\Models\User;
-use App\Notifications\RoomRequestNotification;
+use App\Services\RoomService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -53,18 +49,9 @@ class RoomRequestController extends Controller
     /**
      * Store a new room booking request (cr role only).
      */
-    public function store(StoreRoomRequestRequest $request): RedirectResponse
+    public function store(StoreRoomRequestRequest $request, RoomService $roomService): RedirectResponse
     {
-        $roomRequest = RoomRequest::create([
-            ...$request->validated(),
-            'user_id' => $request->user()->id,
-            'status' => 'pending',
-        ]);
-
-        $roomRequest->load(['room', 'user']);
-
-        $superadmins = User::role('superadmin')->get();
-        Notification::send($superadmins, new RoomRequestNotification($roomRequest, 'created'));
+        $roomService->createRequest($request->user(), $request->validated());
 
         return redirect()->route('requests.index')
             ->with('success', __('app.flash.room_request_submitted'));
@@ -73,9 +60,9 @@ class RoomRequestController extends Controller
     /**
      * Cancel a pending room request (own request only).
      */
-    public function cancel(CancelRoomRequestRequest $request, RoomRequest $roomRequest): RedirectResponse
+    public function cancel(CancelRoomRequestRequest $request, RoomRequest $roomRequest, RoomService $roomService): RedirectResponse
     {
-        $roomRequest->delete();
+        $roomService->cancelRequest($roomRequest);
 
         return back()->with('success', __('app.flash.room_request_cancelled'));
     }
@@ -110,19 +97,13 @@ class RoomRequestController extends Controller
     /**
      * Approve a room request (superadmin only).
      */
-    public function approve(ApproveRoomRequestRequest $request, RoomRequest $roomRequest): RedirectResponse
+    public function approve(ApproveRoomRequestRequest $request, RoomRequest $roomRequest, RoomService $roomService): RedirectResponse
     {
         try {
-            [$approvedRequest, $autoRejectedRequests] = app(ApproveRoomRequest::class)(
-                $request->user(),
-                $roomRequest,
-            );
+            $roomService->approveRequest($request->user(), $roomRequest);
         } catch (ValidationException $exception) {
             return back()->withErrors($exception->errors());
         }
-
-        $approvedRequest->user->notify(new RoomRequestNotification($approvedRequest, 'approved'));
-        $this->sendAutoRejectedNotifications($autoRejectedRequests);
 
         return back()->with('success', __('app.flash.room_request_approved'));
     }
@@ -130,29 +111,10 @@ class RoomRequestController extends Controller
     /**
      * Reject a room request (superadmin only).
      */
-    public function reject(RejectRoomRequestRequest $request, RoomRequest $roomRequest): RedirectResponse
+    public function reject(RejectRoomRequestRequest $request, RoomRequest $roomRequest, RoomService $roomService): RedirectResponse
     {
-        $roomRequest->update([
-            'status' => 'rejected',
-            'reviewed_by' => $request->user()->id,
-            'reviewed_at' => now(),
-        ]);
-
-        $roomRequest->load(['room', 'user']);
-
-        $roomRequest->user->notify(new RoomRequestNotification($roomRequest, 'rejected'));
+        $roomService->rejectRequest($request->user(), $roomRequest);
 
         return back()->with('success', __('app.flash.room_request_rejected'));
-    }
-
-    /**
-     * @param  Collection<int, RoomRequest>  $autoRejectedRequests
-     */
-    private function sendAutoRejectedNotifications(Collection $autoRejectedRequests): void
-    {
-        $autoRejectedRequests->each(function (RoomRequest $roomRequest): void {
-            $roomRequest->loadMissing(['room', 'user']);
-            $roomRequest->user->notify(new RoomRequestNotification($roomRequest, 'rejected'));
-        });
     }
 }
