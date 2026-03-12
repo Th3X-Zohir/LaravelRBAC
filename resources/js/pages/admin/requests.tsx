@@ -30,7 +30,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { formatDate, formatTime } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
+import { formatDate, formatTime, localizeDigits } from '@/lib/utils';
 
 type AdminRoomRequest = {
     id: number;
@@ -59,12 +60,15 @@ type AdminRoomRequest = {
 };
 
 const statusConfig = {
-    pending: { variant: 'secondary' as const, label: 'Pending' },
-    approved: { variant: 'default' as const, label: 'Approved' },
-    rejected: { variant: 'destructive' as const, label: 'Rejected' },
+    pending: { variant: 'secondary' as const, labelKey: 'status.pending' },
+    approved: { variant: 'default' as const, labelKey: 'status.approved' },
+    rejected: { variant: 'destructive' as const, labelKey: 'status.rejected' },
 };
 
-function getReviewerLabel(request: AdminRoomRequest): string {
+function getReviewerLabel(
+    request: AdminRoomRequest,
+    t: (key: string) => string,
+): string {
     if (request.reviewer !== null) {
         return request.reviewer.name;
     }
@@ -83,14 +87,14 @@ function getReviewerLabel(request: AdminRoomRequest): string {
             );
 
             if (requestDay < today) {
-                return 'Rejected (system)';
+                return t('status.rejected_system');
             }
         }
 
-        return 'Rejected';
+        return t('status.rejected');
     }
 
-    return 'Awaiting review';
+    return t('status.awaiting_review');
 }
 
 export default function AdminRequests({
@@ -98,6 +102,7 @@ export default function AdminRequests({
 }: {
     roomRequests: AdminRoomRequest[];
 }) {
+    const { t, locale } = useI18n();
     function approveRequest(requestId: number): void {
         router.patch(approve.url(requestId), undefined, {
             preserveScroll: true,
@@ -112,39 +117,49 @@ export default function AdminRequests({
 
     return (
         <AppLayout>
-            <Head title="Manage Requests" />
+            <Head title={t('admin_requests.title')} />
 
             <div className="flex flex-col gap-6">
                 <div>
                     <h1 className="text-xl font-semibold tracking-tight">
-                        Manage Requests
+                        {t('admin_requests.title')}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Review all room booking requests and notify requesters
-                        through the queued notification system.
+                        {t('admin_requests.subtitle')}
                     </p>
                 </div>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Approval Queue</CardTitle>
+                        <CardTitle>{t('admin_requests.queue_title')}</CardTitle>
                         <CardDescription>
-                            Pending requests require approve or reject actions
-                            from a superadmin.
+                            {t('admin_requests.queue_desc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Requester</TableHead>
-                                    <TableHead>Room</TableHead>
-                                    <TableHead>Schedule</TableHead>
-                                    <TableHead>Purpose</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Reviewer</TableHead>
+                                    <TableHead>
+                                        {t('admin_requests.table_requester')}
+                                    </TableHead>
+                                    <TableHead>
+                                        {t('admin_requests.table_room')}
+                                    </TableHead>
+                                    <TableHead>
+                                        {t('admin_requests.table_schedule')}
+                                    </TableHead>
+                                    <TableHead>
+                                        {t('admin_requests.table_purpose')}
+                                    </TableHead>
+                                    <TableHead>
+                                        {t('admin_requests.table_status')}
+                                    </TableHead>
+                                    <TableHead>
+                                        {t('admin_requests.table_reviewer')}
+                                    </TableHead>
                                     <TableHead className="text-right">
-                                        Actions
+                                        {t('common.action')}
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -165,7 +180,11 @@ export default function AdminRequests({
                                             <div className="flex items-center gap-2">
                                                 <DoorOpen className="size-4 text-muted-foreground" />
                                                 <span className="font-medium">
-                                                    {request.room.room_number}
+                                                    {localizeDigits(
+                                                        request.room
+                                                            .room_number,
+                                                        locale,
+                                                    )}
                                                 </span>
                                             </div>
                                         </TableCell>
@@ -196,14 +215,14 @@ export default function AdminRequests({
                                                         .variant
                                                 }
                                             >
-                                                {
+                                                {t(
                                                     statusConfig[request.status]
-                                                        .label
-                                                }
+                                                        .labelKey,
+                                                )}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-sm text-muted-foreground">
-                                            {getReviewerLabel(request)}
+                                            {getReviewerLabel(request, t)}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {request.status === 'pending' ? (
@@ -221,7 +240,7 @@ export default function AdminRequests({
                                                         }
                                                     >
                                                         <ExternalLink className="size-3.5" />
-                                                        View
+                                                        {t('common.view')}
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -232,7 +251,9 @@ export default function AdminRequests({
                                                         }
                                                     >
                                                         <CheckCircle2 className="size-3.5" />
-                                                        Approve
+                                                        {t(
+                                                            'request_details.approve',
+                                                        )}
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -244,7 +265,9 @@ export default function AdminRequests({
                                                         }
                                                     >
                                                         <XCircle className="size-3.5" />
-                                                        Reject
+                                                        {t(
+                                                            'request_details.reject',
+                                                        )}
                                                     </Button>
                                                 </div>
                                             ) : (
@@ -261,7 +284,7 @@ export default function AdminRequests({
                                                     }
                                                 >
                                                     <ExternalLink className="size-3.5" />
-                                                    View
+                                                    {t('common.view')}
                                                 </Button>
                                             )}
                                         </TableCell>

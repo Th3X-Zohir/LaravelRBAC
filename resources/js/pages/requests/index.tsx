@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
+import { useI18n } from '@/lib/i18n';
 import { formatDate, formatDateTime, formatTime } from '@/lib/utils';
 
 type RoomRequest = {
@@ -53,12 +54,15 @@ type RoomRequest = {
 };
 
 const statusConfig = {
-    pending: { variant: 'secondary' as const, label: 'Pending' },
-    approved: { variant: 'default' as const, label: 'Approved' },
-    rejected: { variant: 'destructive' as const, label: 'Rejected' },
+    pending: { variant: 'secondary' as const, labelKey: 'status.pending' },
+    approved: { variant: 'default' as const, labelKey: 'status.approved' },
+    rejected: { variant: 'destructive' as const, labelKey: 'status.rejected' },
 };
 
-function getReviewerLabel(request: RoomRequest): string {
+function getReviewerLabel(
+    request: RoomRequest,
+    t: (key: string) => string,
+): string {
     if (request.reviewer !== null) {
         return request.reviewer.name;
     }
@@ -77,14 +81,14 @@ function getReviewerLabel(request: RoomRequest): string {
             );
 
             if (requestDay < today) {
-                return 'Rejected (system)';
+                return t('status.rejected_system');
             }
         }
 
-        return 'Rejected';
+        return t('status.rejected');
     }
 
-    return 'Awaiting review';
+    return t('status.awaiting_review');
 }
 
 export default function Requests({
@@ -92,7 +96,16 @@ export default function Requests({
 }: {
     roomRequests: RoomRequest[];
 }) {
+    const { t, locale } = useI18n();
     const [activeTab, setActiveTab] = useState('all');
+    const tabLabel =
+        activeTab === 'pending'
+            ? t('requests.tab_pending')
+            : activeTab === 'approved'
+              ? t('requests.tab_approved')
+              : activeTab === 'rejected'
+                ? t('requests.tab_rejected')
+                : t('requests.tab_all');
 
     const filteredRequests =
         activeTab === 'all'
@@ -114,23 +127,24 @@ export default function Requests({
 
     return (
         <AppLayout>
-            <Head title="My Requests" />
+            <Head title={t('requests.title')} />
 
             <div className="flex flex-col gap-6">
                 <div>
                     <h1 className="text-xl font-semibold tracking-tight">
-                        My Requests
+                        {t('requests.title')}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Track your classroom booking submissions and review
-                        outcomes.
+                        {t('requests.subtitle')}
                     </p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3">
                     <Card size="sm">
                         <CardHeader>
-                            <CardDescription>Pending</CardDescription>
+                            <CardDescription>
+                                {t('requests.tab_pending')}
+                            </CardDescription>
                             <CardTitle className="text-2xl tabular-nums">
                                 {pendingCount}
                             </CardTitle>
@@ -138,7 +152,9 @@ export default function Requests({
                     </Card>
                     <Card size="sm">
                         <CardHeader>
-                            <CardDescription>Approved</CardDescription>
+                            <CardDescription>
+                                {t('requests.tab_approved')}
+                            </CardDescription>
                             <CardTitle className="text-2xl tabular-nums">
                                 {approvedCount}
                             </CardTitle>
@@ -146,7 +162,9 @@ export default function Requests({
                     </Card>
                     <Card size="sm">
                         <CardHeader>
-                            <CardDescription>Total Requests</CardDescription>
+                            <CardDescription>
+                                {t('requests.total_requests')}
+                            </CardDescription>
                             <CardTitle className="text-2xl tabular-nums">
                                 {roomRequests.length}
                             </CardTitle>
@@ -156,18 +174,30 @@ export default function Requests({
 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList variant="line">
-                        <TabsTrigger value="all">All</TabsTrigger>
-                        <TabsTrigger value="pending">Pending</TabsTrigger>
-                        <TabsTrigger value="approved">Approved</TabsTrigger>
-                        <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                        <TabsTrigger value="all">
+                            {t('requests.tab_all')}
+                        </TabsTrigger>
+                        <TabsTrigger value="pending">
+                            {t('requests.tab_pending')}
+                        </TabsTrigger>
+                        <TabsTrigger value="approved">
+                            {t('requests.tab_approved')}
+                        </TabsTrigger>
+                        <TabsTrigger value="rejected">
+                            {t('requests.tab_rejected')}
+                        </TabsTrigger>
                     </TabsList>
                     <TabsContent value={activeTab}>
                         {filteredRequests.length === 0 ? (
                             <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-14 text-center">
                                 <CalendarCheck className="size-10 text-muted-foreground" />
-                                <p className="font-medium">No requests found</p>
+                                <p className="font-medium">
+                                    {t('requests.empty_title')}
+                                </p>
                                 <p className="text-sm text-muted-foreground">
-                                    There are no {activeTab} requests to show.
+                                    {t('requests.empty_desc', {
+                                        tab: tabLabel,
+                                    })}
                                 </p>
                             </div>
                         ) : (
@@ -175,14 +205,26 @@ export default function Requests({
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Room</TableHead>
-                                            <TableHead>Date & Time</TableHead>
-                                            <TableHead>Purpose</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Reviewer</TableHead>
-                                            <TableHead>Submitted</TableHead>
+                                            <TableHead>
+                                                {t('requests.table_room')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('requests.table_date_time')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('requests.table_purpose')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('requests.table_status')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('requests.table_reviewer')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('requests.table_submitted')}
+                                            </TableHead>
                                             <TableHead className="text-right">
-                                                Action
+                                                {t('common.action')}
                                             </TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -205,16 +247,19 @@ export default function Requests({
                                                         <span className="text-sm">
                                                             {formatDate(
                                                                 request.date,
+                                                                locale,
                                                             )}
                                                         </span>
                                                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                                             <Clock className="size-3" />
                                                             {formatTime(
                                                                 request.start_time,
+                                                                locale,
                                                             )}{' '}
                                                             -{' '}
                                                             {formatTime(
                                                                 request.end_time,
+                                                                locale,
                                                             )}
                                                         </span>
                                                     </div>
@@ -230,19 +275,20 @@ export default function Requests({
                                                             ].variant
                                                         }
                                                     >
-                                                        {
+                                                        {t(
                                                             statusConfig[
                                                                 request.status
-                                                            ].label
-                                                        }
+                                                            ].labelKey,
+                                                        )}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-sm text-muted-foreground">
-                                                    {getReviewerLabel(request)}
+                                                    {getReviewerLabel(request, t)}
                                                 </TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">
                                                     {formatDateTime(
                                                         request.created_at,
+                                                        locale,
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-right">
@@ -264,7 +310,7 @@ export default function Requests({
                                                                 }
                                                             >
                                                                 <ExternalLink className="size-3.5" />
-                                                                View
+                                                                {t('common.view')}
                                                             </Button>
                                                             <Button
                                                                 variant="destructive"
@@ -276,7 +322,7 @@ export default function Requests({
                                                                 }
                                                             >
                                                                 <XCircle className="size-3.5" />
-                                                                Cancel
+                                                                {t('common.cancel')}
                                                             </Button>
                                                         </div>
                                                     ) : (
@@ -293,7 +339,7 @@ export default function Requests({
                                                             }
                                                         >
                                                             <ExternalLink className="size-3.5" />
-                                                            View
+                                                            {t('common.view')}
                                                         </Button>
                                                     )}
                                                 </TableCell>

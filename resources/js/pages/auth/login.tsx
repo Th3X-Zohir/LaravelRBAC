@@ -15,8 +15,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import GuestLayout from '@/layouts/guest-layout';
+import { useI18n } from '@/lib/i18n';
 
 export default function Login() {
+    const { t } = useI18n();
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -30,7 +32,7 @@ export default function Login() {
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title={t('auth.log_in')} />
 
             <div className="flex flex-col gap-6">
                 {/* Logo / Brand header */}
@@ -39,29 +41,29 @@ export default function Login() {
                         <DoorOpen className="size-5 text-background" />
                     </div>
                     <h1 className="text-lg font-semibold tracking-tight">
-                        Welcome back
+                        {t('auth.welcome_back')}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Sign in to your RoomBook account
+                        {t('auth.sign_in_subtitle')}
                     </p>
                 </div>
 
                 <Card>
                     <CardHeader className="sr-only">
-                        <CardTitle>Log in</CardTitle>
+                        <CardTitle>{t('auth.log_in')}</CardTitle>
                         <CardDescription>
-                            Enter your credentials to access your account
+                            {t('auth.credentials_hint')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={submit} className="flex flex-col gap-4">
                             {/* Email */}
                             <div className="flex flex-col gap-1.5">
-                                <Label htmlFor="email">Email</Label>
+                                <Label htmlFor="email">{t('auth.email')}</Label>
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="you@diu.edu.bd"
+                                    placeholder={t('auth.email_placeholder')}
                                     value={data.email}
                                     onChange={(e) =>
                                         setData('email', e.target.value)
@@ -78,11 +80,13 @@ export default function Login() {
 
                             {/* Password */}
                             <div className="flex flex-col gap-1.5">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password">
+                                    {t('auth.password')}
+                                </Label>
                                 <Input
                                     id="password"
                                     type="password"
-                                    placeholder="Enter your password"
+                                    placeholder={t('auth.password_placeholder')}
                                     value={data.password}
                                     onChange={(e) =>
                                         setData('password', e.target.value)
@@ -111,7 +115,7 @@ export default function Login() {
                                     htmlFor="remember"
                                     className="text-xs font-normal text-muted-foreground"
                                 >
-                                    Remember me
+                                    {t('auth.remember_me')}
                                 </Label>
                             </div>
 
@@ -121,7 +125,9 @@ export default function Login() {
                                 className="w-full"
                                 disabled={processing}
                             >
-                                {processing ? 'Signing in...' : 'Sign in'}
+                                {processing
+                                    ? t('auth.signing_in')
+                                    : t('auth.sign_in')}
                             </Button>
                         </form>
                     </CardContent>
@@ -129,12 +135,12 @@ export default function Login() {
 
                 {/* Register link */}
                 <p className="text-center text-sm text-muted-foreground">
-                    Don&apos;t have an account?{' '}
+                    {t('auth.dont_have_account')}{' '}
                     <Link
                         href={registerShow.url()}
                         className="font-medium text-foreground underline-offset-4 hover:underline"
                     >
-                        Create an account
+                        {t('auth.create_account')}
                     </Link>
                 </p>
             </div>

@@ -26,6 +26,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { useI18n } from '@/lib/i18n';
 import { formatDate } from '@/lib/utils';
 
 type UserRow = {
@@ -36,13 +37,8 @@ type UserRow = {
     created_at: string;
 };
 
-const roleLabels: Record<string, string> = {
-    authenticated: 'Authenticated',
-    cr: 'CR',
-    superadmin: 'Superadmin',
-};
-
 export default function AdminUsers({ users }: { users: UserRow[] }) {
+    const { t, locale } = useI18n();
     function updateRole(userId: number, role: string): void {
         router.patch(
             updateUserRole.url(userId),
@@ -53,12 +49,12 @@ export default function AdminUsers({ users }: { users: UserRow[] }) {
 
     return (
         <AppLayout>
-            <Head title="Manage Users" />
+            <Head title={t('admin_users.title')} />
 
             <div className="flex flex-col gap-6">
                 <div>
                     <h1 className="text-xl font-semibold tracking-tight">
-                        Manage Users
+                        {t('admin_users.title')}
                     </h1>
                     <p className="text-sm text-muted-foreground">
                         Promote users to CR or superadmin, or return them to the
@@ -69,7 +65,7 @@ export default function AdminUsers({ users }: { users: UserRow[] }) {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>User Roles</CardTitle>
+                        <CardTitle>{t('admin_users.roles_title')}</CardTitle>
                         <CardDescription>
                             Superadmin-only role management for all registered
                             DIU accounts.
@@ -117,11 +113,15 @@ export default function AdminUsers({ users }: { users: UserRow[] }) {
                                                     }
                                                 >
                                                     <ShieldCheck className="size-3" />
-                                                    {roleLabels[currentRole]}
+                                                    {currentRole === 'superadmin'
+                                                        ? t('roles.superadmin')
+                                                        : currentRole === 'cr'
+                                                          ? t('roles.cr')
+                                                          : t('roles.authenticated')}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-muted-foreground">
-                                                {formatDate(user.created_at)}
+                                                {formatDate(user.created_at, locale)}
                                             </TableCell>
                                             <TableCell>
                                                 <Select
@@ -135,17 +135,23 @@ export default function AdminUsers({ users }: { users: UserRow[] }) {
                                                     }
                                                 >
                                                     <SelectTrigger className="w-[170px]">
-                                                        <SelectValue placeholder="Select role" />
+                                                        <SelectValue
+                                                            placeholder={t(
+                                                                'admin_users.select_role',
+                                                            )}
+                                                        />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="authenticated">
-                                                            Authenticated
+                                                            {t(
+                                                                'roles.authenticated',
+                                                            )}
                                                         </SelectItem>
                                                         <SelectItem value="cr">
-                                                            CR
+                                                            {t('roles.cr')}
                                                         </SelectItem>
                                                         <SelectItem value="superadmin">
-                                                            Superadmin
+                                                            {t('roles.superadmin')}
                                                         </SelectItem>
                                                     </SelectContent>
                                                 </Select>

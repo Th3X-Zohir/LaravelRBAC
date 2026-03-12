@@ -30,7 +30,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { formatDate, formatTime } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
+import { formatDate, formatNumber, formatTime, localizeDigits } from '@/lib/utils';
 import type { Auth } from '@/types';
 
 type Stats = {
@@ -84,9 +85,9 @@ type PendingRequest = {
 };
 
 const statusConfig = {
-    pending: { variant: 'secondary' as const, label: 'Pending' },
-    approved: { variant: 'default' as const, label: 'Approved' },
-    rejected: { variant: 'destructive' as const, label: 'Rejected' },
+    pending: { variant: 'secondary' as const, labelKey: 'status.pending' },
+    approved: { variant: 'default' as const, labelKey: 'status.approved' },
+    rejected: { variant: 'destructive' as const, labelKey: 'status.rejected' },
 };
 
 export default function Dashboard({
@@ -99,80 +100,81 @@ export default function Dashboard({
     pendingRequests: PendingRequest[];
 }) {
     const { auth } = usePage<{ auth: Auth }>().props;
+    const { t, locale } = useI18n();
     const roles = auth.user?.roles ?? [];
     const isSuperadmin = roles.includes('superadmin');
     const isCr = roles.includes('cr');
 
     const primaryStats = [
         {
-            label: 'Available Rooms',
+            label: t('dashboard.card_available_rooms'),
             value: stats.available_rooms,
             icon: DoorOpen,
-            description: 'Ready for new classroom requests',
+            description: t('dashboard.card_available_rooms_desc'),
         },
         {
-            label: 'Total Rooms',
+            label: t('dashboard.card_total_rooms'),
             value: stats.total_rooms,
             icon: Search,
-            description: 'Published in the availability directory',
+            description: t('dashboard.card_total_rooms_desc'),
         },
         {
-            label: 'My Pending Requests',
+            label: t('dashboard.card_my_pending_requests'),
             value: stats.my_pending_requests,
             icon: CalendarClock,
-            description: 'Awaiting superadmin review',
+            description: t('dashboard.card_my_pending_requests_desc'),
         },
         {
-            label: 'My Approved Requests',
+            label: t('dashboard.card_my_approved_requests'),
             value: stats.my_approved_requests,
             icon: CalendarCheck,
-            description: 'Approved classroom requests',
+            description: t('dashboard.card_my_approved_requests_desc'),
         },
     ];
 
     const adminStats = [
         {
-            label: 'Pending Approvals',
+            label: t('dashboard.card_pending_approvals'),
             value: stats.pending_approvals ?? 0,
             icon: ClipboardCheck,
-            description: 'Requests waiting in the admin queue',
+            description: t('dashboard.card_pending_approvals_desc'),
         },
         {
-            label: 'Total Users',
+            label: t('dashboard.card_total_users'),
             value: stats.total_users ?? 0,
             icon: Users,
-            description: 'Registered DIU users',
+            description: t('dashboard.card_total_users_desc'),
         },
         {
-            label: 'Occupied Rooms',
+            label: t('dashboard.card_occupied_rooms'),
             value: stats.occupied_rooms,
             icon: DoorClosed,
-            description: 'Currently marked as occupied',
+            description: t('dashboard.card_occupied_rooms_desc'),
         },
         {
-            label: 'Maintenance Rooms',
+            label: t('dashboard.card_maintenance_rooms'),
             value: stats.maintenance_rooms,
             icon: ShieldCheck,
-            description: 'Temporarily unavailable rooms',
+            description: t('dashboard.card_maintenance_rooms_desc'),
         },
     ];
 
     return (
         <AppLayout>
-            <Head title="Dashboard" />
+            <Head title={t('dashboard.title')} />
 
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-2">
                         <h1 className="text-xl font-semibold tracking-tight">
-                            Dashboard
+                            {t('dashboard.title')}
                         </h1>
                         <p className="text-sm text-muted-foreground">
                             {isSuperadmin
-                                ? 'Monitor room availability, review pending requests, and manage user roles.'
+                                ? t('dashboard.subtitle_superadmin')
                                 : isCr
-                                  ? 'Track your booking activity and request available classrooms.'
-                                  : 'Browse room availability and check the current classroom status.'}
+                                  ? t('dashboard.subtitle_cr')
+                                  : t('dashboard.subtitle_guest')}
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -181,7 +183,7 @@ export default function Dashboard({
                             className={buttonVariants({ size: 'sm' })}
                         >
                             <Search className="size-3.5" />
-                            Browse Rooms
+                            {t('dashboard.browse_rooms')}
                         </Link>
                         {isSuperadmin && (
                             <Link
@@ -192,7 +194,7 @@ export default function Dashboard({
                                 })}
                             >
                                 <ClipboardCheck className="size-3.5" />
-                                Review Requests
+                                {t('dashboard.review_requests')}
                             </Link>
                         )}
                     </div>
@@ -209,7 +211,7 @@ export default function Dashboard({
                                     <stat.icon className="size-4 text-muted-foreground" />
                                 </div>
                                 <CardTitle className="text-2xl tabular-nums">
-                                    {stat.value}
+                                    {formatNumber(stat.value, locale)}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -249,53 +251,67 @@ export default function Dashboard({
                 <div className="grid gap-6 xl:grid-cols-5">
                     <Card className="xl:col-span-3">
                         <CardHeader>
-                            <CardTitle>Recent Requests</CardTitle>
+                            <CardTitle>{t('dashboard.recent_title')}</CardTitle>
                             <CardDescription>
-                                Your latest room request activity.
+                                {t('dashboard.recent_desc')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             {recentRequests.length === 0 ? (
                                 <div className="rounded-lg border border-dashed px-4 py-10 text-center">
                                     <p className="font-medium">
-                                        No room requests yet
+                                        {t('dashboard.recent_empty_title')}
                                     </p>
                                     <p className="mt-1 text-sm text-muted-foreground">
                                         {isCr
-                                            ? 'Start from the rooms page to submit your first request.'
-                                            : 'Your request history will appear here once you receive CR access.'}
+                                            ? t('dashboard.empty_non_cr')
+                                            : t('dashboard.empty_cr')}
                                     </p>
                                 </div>
                             ) : (
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Room</TableHead>
-                                            <TableHead>Schedule</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Reviewer</TableHead>
+                                            <TableHead>
+                                                {t('dashboard.table_room')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('dashboard.table_schedule')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('dashboard.table_status')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('dashboard.table_reviewer')}
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {recentRequests.map((request) => (
                                             <TableRow key={request.id}>
                                                 <TableCell className="font-medium">
-                                                    {request.room.room_number}
+                                                    {localizeDigits(
+                                                        request.room.room_number,
+                                                        locale,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col">
                                                         <span>
                                                             {formatDate(
                                                                 request.date,
+                                                                locale,
                                                             )}
                                                         </span>
                                                         <span className="text-xs text-muted-foreground">
                                                             {formatTime(
                                                                 request.start_time,
+                                                                locale,
                                                             )}{' '}
                                                             -{' '}
                                                             {formatTime(
                                                                 request.end_time,
+                                                                locale,
                                                             )}
                                                         </span>
                                                     </div>
@@ -308,16 +324,16 @@ export default function Dashboard({
                                                             ].variant
                                                         }
                                                     >
-                                                        {
+                                                        {t(
                                                             statusConfig[
                                                                 request.status
-                                                            ].label
-                                                        }
+                                                            ].labelKey,
+                                                        )}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-muted-foreground">
                                                     {request.reviewer?.name ??
-                                                        'Pending review'}
+                                                        t('status.pending_review')}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -331,13 +347,13 @@ export default function Dashboard({
                         <CardHeader>
                             <CardTitle>
                                 {isSuperadmin
-                                    ? 'Pending Approval Queue'
-                                    : 'Role Access'}
+                                    ? t('dashboard.section_pending_queue_title')
+                                    : t('dashboard.section_role_access_title')}
                             </CardTitle>
                             <CardDescription>
                                 {isSuperadmin
-                                    ? 'Latest requests that need admin action.'
-                                    : 'What your current role can do in RoomBook.'}
+                                    ? t('dashboard.section_pending_queue_desc')
+                                    : t('dashboard.section_role_access_desc')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-3">
@@ -345,10 +361,10 @@ export default function Dashboard({
                                 pendingRequests.length === 0 ? (
                                     <div className="rounded-lg border border-dashed px-4 py-10 text-center">
                                         <p className="font-medium">
-                                            No pending requests
+                                            {t('dashboard.pending_empty_title')}
                                         </p>
                                         <p className="mt-1 text-sm text-muted-foreground">
-                                            The approval queue is clear.
+                                            {t('dashboard.pending_empty_desc')}
                                         </p>
                                     </div>
                                 ) : (
@@ -360,11 +376,14 @@ export default function Dashboard({
                                             <div className="flex items-start justify-between gap-3">
                                                 <div>
                                                     <p className="font-medium">
-                                                        Room{' '}
-                                                        {
-                                                            request.room
-                                                                .room_number
-                                                        }
+                                                        {t(
+                                                            'dashboard.pending_room_label',
+                                                            {
+                                                                room: request
+                                                                    .room
+                                                                    .room_number,
+                                                            },
+                                                        )}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
                                                         {request.user.name} •{' '}
@@ -372,13 +391,21 @@ export default function Dashboard({
                                                     </p>
                                                 </div>
                                                 <Badge variant="secondary">
-                                                    Pending
+                                                    {t('status.pending')}
                                                 </Badge>
                                             </div>
                                             <p className="mt-2 text-sm text-muted-foreground">
-                                                {formatDate(request.date)} •{' '}
-                                                {formatTime(request.start_time)}{' '}
-                                                - {formatTime(request.end_time)}
+                                                {formatDate(request.date, locale)}{' '}
+                                                •{' '}
+                                                {formatTime(
+                                                    request.start_time,
+                                                    locale,
+                                                )}{' '}
+                                                -{' '}
+                                                {formatTime(
+                                                    request.end_time,
+                                                    locale,
+                                                )}
                                             </p>
                                             <p className="mt-2 line-clamp-2 text-sm">
                                                 {request.purpose}
@@ -390,27 +417,30 @@ export default function Dashboard({
                                 <>
                                     <div className="rounded-lg border p-3">
                                         <p className="font-medium">
-                                            Authenticated
+                                            {t('roles.authenticated')}
                                         </p>
                                         <p className="mt-1 text-sm text-muted-foreground">
-                                            Browse room availability and track
-                                            your account notifications.
-                                        </p>
-                                    </div>
-                                    <div className="rounded-lg border p-3">
-                                        <p className="font-medium">CR</p>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            Submit room booking requests and
-                                            cancel your own pending requests.
+                                            {t(
+                                                'dashboard.role_access_authenticated_desc',
+                                            )}
                                         </p>
                                     </div>
                                     <div className="rounded-lg border p-3">
                                         <p className="font-medium">
-                                            Superadmin
+                                            {t('roles.cr')}
                                         </p>
                                         <p className="mt-1 text-sm text-muted-foreground">
-                                            Manage users, review all requests,
-                                            and oversee room availability.
+                                            {t('dashboard.role_access_cr_desc')}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-lg border p-3">
+                                        <p className="font-medium">
+                                            {t('roles.superadmin')}
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            {t(
+                                                'dashboard.role_access_superadmin_desc',
+                                            )}
                                         </p>
                                     </div>
                                 </>

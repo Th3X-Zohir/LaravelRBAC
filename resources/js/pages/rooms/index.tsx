@@ -45,7 +45,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { formatDate } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
+import { formatDate, localizeDigits } from '@/lib/utils';
 import type { Auth, User } from '@/types';
 
 type Room = {
@@ -101,7 +102,7 @@ async function fetchJson<T>(url: string): Promise<T> {
     });
 
     if (!response.ok) {
-        throw new Error('Unable to load room availability.');
+        throw new Error('rooms.availability_load_error');
     }
 
     return (await response.json()) as T;
@@ -114,6 +115,8 @@ function RoomAvailabilityShell({
     user: User | null;
     children: ReactNode;
 }) {
+    const { t } = useI18n();
+
     if (user !== null) {
         return <AppLayout>{children}</AppLayout>;
     }
@@ -128,7 +131,7 @@ function RoomAvailabilityShell({
                     >
                         <DoorOpen className="size-5" />
                         <span className="text-sm font-semibold tracking-tight">
-                            RoomBook
+                            {t('brand.name')}
                         </span>
                     </Link>
                     <div className="ml-auto flex items-center gap-2">
@@ -140,7 +143,7 @@ function RoomAvailabilityShell({
                             render={<Link href={loginShow.url()} />}
                         >
                             <LogIn className="size-3.5" />
-                            Sign in
+                            {t('rooms.sign_in')}
                         </Button>
                         <Button
                             size="sm"
@@ -148,7 +151,7 @@ function RoomAvailabilityShell({
                             render={<Link href={registerShow.url()} />}
                         >
                             <UserPlus className="size-3.5" />
-                            Register
+                            {t('rooms.register')}
                         </Button>
                     </div>
                 </div>
@@ -163,6 +166,7 @@ function RoomAvailabilityShell({
 
 export default function Rooms({ slots }: { slots: Slot[] }) {
     const { auth } = usePage<{ auth: Auth }>().props;
+    const { t, locale } = useI18n();
     const user = auth.user;
     const uiState = useObservable({
         selectedDate: '',
@@ -291,7 +295,11 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                                     id="availability-slot"
                                     className="w-full"
                                 >
-                                    <SelectValue placeholder="Select a time slot" />
+                                    <SelectValue
+                                        placeholder={t(
+                                            'rooms.select_time_slot',
+                                        )}
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {slots.map((slot) => (
@@ -308,10 +316,12 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                         <div className="flex h-9 items-center gap-2 rounded-lg border border-dashed px-3 text-sm text-muted-foreground">
                             <SearchCheck className="size-4" />
                             {searchKey === null
-                                ? 'Pick both filters to search.'
+                                ? t('rooms.search_hint')
                                 : isLoading
-                                  ? 'Checking availability...'
-                                  : `${availableRooms.length} room${availableRooms.length === 1 ? '' : 's'} available`}
+                                  ? t('rooms.checking_availability')
+                                  : t('rooms.rooms_available', {
+                                        count: availableRooms.length,
+                                    })}
                         </div>
                     </CardContent>
                 </Card>
@@ -320,33 +330,36 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                     <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-14 text-center">
                         <SearchCheck className="size-10 text-muted-foreground" />
                         <p className="font-medium">
-                            Choose a date and time slot
+                            {t('rooms.choose_filters_title')}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            Room availability is only meaningful for a specific
-                            booking window.
+                            {t('rooms.choose_filters_desc')}
                         </p>
                     </div>
                 ) : isLoading ? (
                     <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-14 text-center">
                         <SearchCheck className="size-10 animate-pulse text-muted-foreground" />
                         <p className="font-medium">
-                            Checking room availability
+                            {t('rooms.checking_title')}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            Looking for rooms that are free on{' '}
-                            {formatDate(selectedDate)}.
+                            {t('rooms.checking_desc', {
+                                date: formatDate(selectedDate, locale),
+                            })}
                         </p>
                     </div>
                 ) : availableRooms.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-14 text-center">
                         <DoorOpen className="size-10 text-muted-foreground" />
-                        <p className="font-medium">No rooms available</p>
+                        <p className="font-medium">
+                            {t('rooms.no_rooms_title')}
+                        </p>
                         <p className="text-sm text-muted-foreground">
-                            No room is free for{' '}
-                            {selectedSlot?.label ?? selectedStartTime} on{' '}
-                            {formatDate(selectedDate)}. Try a different date or
-                            slot.
+                            {t('rooms.no_rooms_desc', {
+                                slot:
+                                    selectedSlot?.label ?? selectedStartTime,
+                                date: formatDate(selectedDate, locale),
+                            })}
                         </p>
                     </div>
                 ) : (
@@ -357,33 +370,40 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
                                             <CardTitle>
-                                                Room {room.room_number}
+                                                {t('rooms.room_title', {
+                                                    room: localizeDigits(
+                                                        room.room_number,
+                                                        locale,
+                                                    ),
+                                                })}
                                             </CardTitle>
                                             <CardDescription>
-                                                Free for{' '}
-                                                {selectedSlot?.label ??
-                                                    selectedStartTime}
+                                                {t('rooms.free_for', {
+                                                    slot:
+                                                        selectedSlot?.label ??
+                                                        selectedStartTime,
+                                                })}
                                             </CardDescription>
                                         </div>
                                         <Badge variant="default">
-                                            Available
+                                            {t('rooms.available_badge')}
                                         </Badge>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="flex flex-col gap-3">
                                     <div className="rounded-lg bg-muted/50 p-3">
                                         <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">
-                                            Booking window
+                                            {t('rooms.booking_window')}
                                         </p>
                                         <p className="mt-1 text-sm">
-                                            {formatDate(selectedDate)} ·{' '}
+                                            {formatDate(selectedDate, locale)} ·{' '}
                                             {selectedSlot?.label ??
                                                 selectedStartTime}
                                         </p>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-muted-foreground">
-                                            Pending requests
+                                            {t('rooms.pending_requests')}
                                         </span>
                                         <Badge variant="outline">
                                             {room.has_pending_request}
@@ -393,8 +413,8 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                                 <CardFooter className="justify-between gap-3">
                                     <span className="text-xs text-muted-foreground">
                                         {canRequestRoom
-                                            ? 'This room is free for the selected slot.'
-                                            : 'Browse availability now, then sign in to request this room.'}
+                                            ? t('rooms.room_free')
+                                            : t('rooms.room_free_sign_in_cta')}
                                     </span>
                                     {canRequestRoom ? (
                                         <Button
@@ -404,7 +424,7 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                                             }
                                         >
                                             <CalendarPlus className="size-3.5" />
-                                            Request Room
+                                            {t('rooms.request_room')}
                                         </Button>
                                     ) : null}
                                 </CardFooter>
@@ -429,12 +449,15 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>
-                            Request {selectedRoom?.room_number ?? 'room'}
+                            {t('rooms.request_room_title', {
+                                room: selectedRoom?.room_number ?? 'room',
+                            })}
                         </DialogTitle>
                         <DialogDescription>
-                            This request will be submitted for{' '}
-                            {formatDate(selectedDate)} at{' '}
-                            {selectedSlot?.label ?? selectedStartTime}.
+                            {t('rooms.dialog_desc', {
+                                date: formatDate(selectedDate, locale),
+                                slot: selectedSlot?.label ?? selectedStartTime,
+                            })}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -444,15 +467,19 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                     >
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="flex flex-col gap-1.5">
-                                <Label htmlFor="request-date">Date</Label>
+                                <Label htmlFor="request-date">
+                                    {t('rooms.field_date')}
+                                </Label>
                                 <Input
                                     id="request-date"
-                                    value={formatDate(form.data.date)}
+                                    value={formatDate(form.data.date, locale)}
                                     disabled
                                 />
                             </div>
                             <div className="flex flex-col gap-1.5">
-                                <Label htmlFor="request-room">Room</Label>
+                                <Label htmlFor="request-room">
+                                    {t('rooms.field_room')}
+                                </Label>
                                 <Input
                                     id="request-room"
                                     value={selectedRoom?.room_number ?? ''}
@@ -460,7 +487,9 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                                 />
                             </div>
                             <div className="flex flex-col gap-1.5 sm:col-span-2">
-                                <Label htmlFor="request-slot">Time slot</Label>
+                                <Label htmlFor="request-slot">
+                                    {t('rooms.field_time_slot')}
+                                </Label>
                                 <Input
                                     id="request-slot"
                                     value={selectedSlot?.label ?? ''}
@@ -470,14 +499,16 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="purpose">Purpose</Label>
+                            <Label htmlFor="purpose">
+                                {t('rooms.field_purpose')}
+                            </Label>
                             <textarea
                                 id="purpose"
                                 value={form.data.purpose}
                                 onChange={(event) =>
                                     form.setData('purpose', event.target.value)
                                 }
-                                placeholder="Explain why this classroom is needed."
+                                placeholder={t('rooms.purpose_placeholder')}
                                 className={textareaClasses()}
                             />
                             {form.errors.purpose ? (
@@ -514,12 +545,12 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                                 variant="outline"
                                 onClick={closeBookingDialog}
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button type="submit" disabled={form.processing}>
                                 {form.processing
-                                    ? 'Submitting...'
-                                    : 'Submit Request'}
+                                    ? t('rooms.submitting')
+                                    : t('rooms.submit_request')}
                             </Button>
                         </DialogFooter>
                     </form>
