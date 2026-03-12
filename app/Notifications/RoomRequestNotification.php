@@ -27,22 +27,23 @@ class RoomRequestNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * @return array{title: string, message: string, type: string, action: string, audience: string, room_request_id: int, url: string}
+     * @return array{title_key: string, message_key: string, replacements: array<string, scalar|null>, type: string, action: string, audience: string, room_request_id: int, url: string}
      */
     public function toArray(object $notifiable): array
     {
         $room = $this->roomRequest->room;
         $user = $this->roomRequest->user;
-        $date = $this->roomRequest->date->format('M d, Y');
+        $date = $this->roomRequest->date->toDateString();
 
         return match ($this->action) {
             'created' => [
-                'title' => __('app.notifications.new_request_title'),
-                'message' => __('app.notifications.new_request_message', [
+                'title_key' => 'app.notifications.new_request_title',
+                'message_key' => 'app.notifications.new_request_message',
+                'replacements' => [
                     'user' => $user->name,
                     'room' => $room->room_number,
                     'date' => $date,
-                ]),
+                ],
                 'type' => 'info',
                 'action' => 'created',
                 'audience' => 'admin',
@@ -50,11 +51,12 @@ class RoomRequestNotification extends Notification implements ShouldQueue
                 'url' => route('admin.requests.show', $this->roomRequest),
             ],
             'approved' => [
-                'title' => __('app.notifications.approved_title'),
-                'message' => __('app.notifications.approved_message', [
+                'title_key' => 'app.notifications.approved_title',
+                'message_key' => 'app.notifications.approved_message',
+                'replacements' => [
                     'room' => $room->room_number,
                     'date' => $date,
-                ]),
+                ],
                 'type' => 'approved',
                 'action' => 'approved',
                 'audience' => 'requester',
@@ -62,11 +64,12 @@ class RoomRequestNotification extends Notification implements ShouldQueue
                 'url' => route('requests.show', $this->roomRequest),
             ],
             'rejected' => [
-                'title' => __('app.notifications.rejected_title'),
-                'message' => __('app.notifications.rejected_message', [
+                'title_key' => 'app.notifications.rejected_title',
+                'message_key' => 'app.notifications.rejected_message',
+                'replacements' => [
                     'room' => $room->room_number,
                     'date' => $date,
-                ]),
+                ],
                 'type' => 'rejected',
                 'action' => 'rejected',
                 'audience' => 'requester',
@@ -74,10 +77,11 @@ class RoomRequestNotification extends Notification implements ShouldQueue
                 'url' => route('requests.show', $this->roomRequest),
             ],
             default => [
-                'title' => __('app.notifications.updated_title'),
-                'message' => __('app.notifications.updated_message', [
+                'title_key' => 'app.notifications.updated_title',
+                'message_key' => 'app.notifications.updated_message',
+                'replacements' => [
                     'room' => $room->room_number,
-                ]),
+                ],
                 'type' => 'info',
                 'action' => 'updated',
                 'audience' => 'requester',
