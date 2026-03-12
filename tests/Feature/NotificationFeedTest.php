@@ -69,10 +69,16 @@ it('localizes the same notification payload using the current session locale', f
         ->assertJsonPath('items.0.title', 'Room Request Approved')
         ->assertJsonPath('items.0.message', 'Your request for room '.$roomRequest->room->room_number.' on Mar 12, 2026 has been approved.');
 
+    $bengaliRoomNumber = str_replace(
+        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+        ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'],
+        $roomRequest->room->room_number
+    );
+
     $banglaResponse
         ->assertOk()
         ->assertJsonPath('items.0.title', 'রুম অনুরোধ অনুমোদিত')
-        ->assertJsonPath('items.0.message', 'মার্চ ১২, ২০২৬ তারিখে '.$roomRequest->room->room_number.' রুমের জন্য আপনার অনুরোধটি অনুমোদিত হয়েছে।');
+        ->assertJsonPath('items.0.message', 'মার্চ ১২, ২০২৬ তারিখে '.$bengaliRoomNumber.' রুমের জন্য আপনার অনুরোধটি অনুমোদিত হয়েছে।');
 });
 
 it('shares the same notifications payload with inertia pages', function () {
