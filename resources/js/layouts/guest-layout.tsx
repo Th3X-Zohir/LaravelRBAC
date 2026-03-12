@@ -2,12 +2,15 @@ import { Link } from '@inertiajs/react';
 import { DoorOpen } from 'lucide-react';
 import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useI18n } from '@/lib/i18n';
 
 export default function GuestLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const { t } = useI18n();
+
     return (
         <div className="flex min-h-screen flex-col bg-background">
             {/* Minimal top bar */}
@@ -18,7 +21,7 @@ export default function GuestLayout({
                 >
                     <DoorOpen className="size-5" />
                     <span className="text-sm font-semibold tracking-tight">
-                        RoomBook
+                        {t('brand.name')}
                     </span>
                 </Link>
 
@@ -35,8 +38,10 @@ export default function GuestLayout({
             {/* Minimal footer */}
             <footer className="flex h-12 items-center justify-center border-t px-6">
                 <p className="text-xs text-muted-foreground">
-                    &copy; {new Date().getFullYear()} RoomBook. All rights
-                    reserved.
+                    {t('common.footer_rights', {
+                        year: new Date().getFullYear(),
+                        app: t('brand.name'),
+                    })}
                 </p>
             </footer>
         </div>
