@@ -27,7 +27,7 @@ class ApproveRoomRequest
 
             if ($lockedRequest->status !== 'pending') {
                 throw ValidationException::withMessages([
-                    'status' => ['Only pending requests can be approved.'],
+                    'status' => [__('app.validation.only_pending_can_be_approved')],
                 ]);
             }
 
@@ -47,7 +47,7 @@ class ApproveRoomRequest
 
             if ($hasConflict) {
                 throw ValidationException::withMessages([
-                    'status' => ['This time slot has already been approved for that room and date.'],
+                    'status' => [__('app.validation.time_slot_already_approved')],
                 ]);
             }
 

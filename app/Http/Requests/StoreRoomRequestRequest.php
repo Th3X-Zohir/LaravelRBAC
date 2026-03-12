@@ -56,7 +56,7 @@ class StoreRoomRequestRequest extends FormRequest
                 }
 
                 if ($room->status !== 'available') {
-                    $validator->errors()->add('room_id', 'This room is not available for booking.');
+                    $validator->errors()->add('room_id', __('app.validation.room_not_available'));
 
                     return;
                 }
@@ -64,7 +64,7 @@ class StoreRoomRequestRequest extends FormRequest
                 $slot = RoomRequest::slotForStartTime($this->string('start_time')->toString());
 
                 if ($slot === null || $slot['end_time'] !== $this->string('end_time')->toString()) {
-                    $validator->errors()->add('end_time', 'Select one of the available 90-minute time slots.');
+                    $validator->errors()->add('end_time', __('app.validation.select_90_min_slot'));
 
                     return;
                 }
@@ -77,7 +77,7 @@ class StoreRoomRequestRequest extends FormRequest
                     ->exists();
 
                 if ($hasConflict) {
-                    $validator->errors()->add('start_time', 'This time slot is already booked for the selected date.');
+                    $validator->errors()->add('start_time', __('app.validation.time_slot_already_booked'));
                 }
             },
         ];
@@ -89,8 +89,8 @@ class StoreRoomRequestRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'date.after_or_equal' => 'The booking date must be today or a future date.',
-            'start_time.in' => 'Select one of the available 90-minute time slots.',
+            'date.after_or_equal' => __('app.validation.booking_date_future'),
+            'start_time.in' => __('app.validation.select_90_min_slot'),
         ];
     }
 }
