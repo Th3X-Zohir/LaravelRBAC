@@ -16,6 +16,7 @@ import { show as registerShow } from '@/actions/App/Http/Controllers/Auth/Regist
 import { search } from '@/actions/App/Http/Controllers/RoomController';
 import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
 import { store } from '@/actions/App/Http/Controllers/RoomRequestController';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -135,6 +136,7 @@ function RoomAvailabilityShell({
                         </span>
                     </Link>
                     <div className="ml-auto flex items-center gap-2">
+                        <LanguageSwitcher />
                         <ThemeToggle />
                         <Button
                             variant="outline"
@@ -356,8 +358,7 @@ export default function Rooms({ slots }: { slots: Slot[] }) {
                         </p>
                         <p className="text-sm text-muted-foreground">
                             {t('rooms.no_rooms_desc', {
-                                slot:
-                                    selectedSlot?.label ?? selectedStartTime,
+                                slot: selectedSlot?.label ?? selectedStartTime,
                                 date: formatDate(selectedDate, locale),
                             })}
                         </p>
