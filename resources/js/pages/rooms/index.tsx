@@ -80,8 +80,16 @@ function textareaClasses(): string {
     return 'flex min-h-28 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50';
 }
 
+/**
+ * Get the today's date in the local timezone.
+ * @returns The today's date in the local timezone.
+ */
 function todayDate(): string {
-    return new Date().toISOString().slice(0, 10);
+    const localDate = new Date();
+    const offsetDate = new Date(
+        localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    );
+    return offsetDate.toISOString().slice(0, 10);
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
