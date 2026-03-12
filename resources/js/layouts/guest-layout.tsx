@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { DoorOpen } from 'lucide-react';
+
 import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useI18n } from '@/lib/i18n';
 
@@ -25,7 +27,8 @@ export default function GuestLayout({
                     </span>
                 </Link>
 
-                <div className="ml-auto flex items-center">
+                <div className="ml-auto flex items-center gap-1">
+                    <LanguageSwitcher />
                     <ThemeToggle />
                 </div>
             </header>
