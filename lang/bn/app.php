@@ -168,7 +168,7 @@ return [
         'empty_title' => 'কোনো অনুরোধ পাওয়া যায়নি',
         'empty_desc' => ':tab অনুরোধ দেখানোর মতো কিছু নেই।',
         'table_room' => 'রুম',
-        'table_date_time' => 'তারিখ ও সময়',
+        'table_schedule' => 'সময়সূচি',
         'table_purpose' => 'উদ্দেশ্য',
         'table_status' => 'স্ট্যাটাস',
         'table_reviewer' => 'রিভিউয়ার',
@@ -240,6 +240,8 @@ return [
         'rejected_message' => ':date তারিখে :room রুমের জন্য আপনার অনুরোধটি প্রত্যাখ্যাত হয়েছে।',
         'updated_title' => 'রুম অনুরোধ আপডেট',
         'updated_message' => ':room রুমের অনুরোধটি আপডেট করা হয়েছে।',
+        'role_changed_title' => 'রোল আপডেট হয়েছে',
+        'role_changed_message' => 'আপনার অ্যাক্সেস :previous_role থেকে :new_role করা হয়েছে।',
         'modal_title' => 'নোটিফিকেশন',
         'mark_all_read' => 'সবগুলো পড়া হিসেবে চিহ্নিত করুন',
         'unread_count' => ':countটি অপঠিত নোটিফিকেশন|:countটি অপঠিত নোটিফিকেশন',
@@ -249,7 +251,7 @@ return [
 
     'theme' => [
         'toggle' => 'থিম পরিবর্তন করুন',
-        'light' => 'হালকা',
+        'light' => 'লাইট',
         'dark' => 'ডার্ক',
         'system' => 'সিস্টেম',
     ],
