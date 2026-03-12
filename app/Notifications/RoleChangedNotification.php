@@ -31,30 +31,19 @@ class RoleChangedNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * Get the array representation of the notification.
-     *
-     * @return array{title: string, message: string, type: string, url: string}
+     * @return array{title_key: string, message_key: string, replacements: array<string, scalar|null>, type: string, url: string}
      */
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Role Updated',
-            'message' => sprintf(
-                'Your access changed from %s to %s.',
-                $this->formatRole($this->previousRole),
-                $this->formatRole($this->newRole),
-            ),
+            'title_key' => 'app.notifications.role_changed_title',
+            'message_key' => 'app.notifications.role_changed_message',
+            'replacements' => [
+                'previous_role' => $this->previousRole,
+                'new_role' => $this->newRole,
+            ],
             'type' => 'info',
             'url' => route('dashboard'),
         ];
-    }
-
-    private function formatRole(string $role): string
-    {
-        return match ($role) {
-            'cr' => 'CR',
-            'superadmin' => 'Superadmin',
-            default => 'Authenticated',
-        };
     }
 }
