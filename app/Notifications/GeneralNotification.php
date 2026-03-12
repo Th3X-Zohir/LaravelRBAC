@@ -10,7 +10,7 @@ class GeneralNotification extends Notification
     use Queueable;
 
     /**
-     * @param  array{title: string, message: string, type: string}  $data
+     * @param  array{title?: string, message?: string, title_key?: string, message_key?: string, replacements?: array<string, scalar|null>, type: string, url?: string}  $data
      */
     public function __construct(
         public array $data,
@@ -25,7 +25,7 @@ class GeneralNotification extends Notification
     }
 
     /**
-     * @return array{title: string, message: string, type: string}
+     * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array
     {
