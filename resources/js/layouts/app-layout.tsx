@@ -3,6 +3,7 @@ import {
     CalendarCheck,
     ClipboardCheck,
     DoorOpen,
+    Languages,
     LayoutDashboard,
     LogOut,
     Menu,
@@ -42,6 +43,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useI18n } from '@/lib/i18n';
 import type { Auth } from '@/types';
 
 type NavItem = {
@@ -60,20 +62,22 @@ function getInitials(name: string): string {
         .slice(0, 2);
 }
 
-function getRoleLabel(roles: string[]): string {
+function getRoleLabel(roles: string[], t: (key: string) => string): string {
     if (roles.includes('superadmin')) {
-        return 'Superadmin';
+        return t('roles.superadmin');
     }
 
     if (roles.includes('cr')) {
-        return 'CR';
+        return t('roles.cr');
     }
 
-    return 'Authenticated';
+    return t('roles.authenticated');
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { auth, url } = usePage<{ auth: Auth; url: string }>().props;
+    const { t, locale, availableLocales } = useI18n();
+    console.log('🚀 ~ AppLayout ~ availableLocales:', availableLocales);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const user = auth.user;
 
@@ -88,19 +92,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const navItems: NavItem[] = [
         {
-            label: 'Dashboard',
+            label: t('nav.dashboard'),
             href: dashboard.url(),
             icon: <LayoutDashboard className="size-4" />,
             match: '/dashboard',
         },
         {
-            label: 'Rooms',
+            label: t('nav.rooms'),
             href: roomsIndex.url(),
             icon: <Search className="size-4" />,
             match: '/rooms',
         },
         {
-            label: 'My Requests',
+            label: t('nav.my_requests'),
             href: requestsIndex.url(),
             icon: <CalendarCheck className="size-4" />,
             match: '/requests',
@@ -108,13 +112,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         ...(isSuperadmin
             ? [
                   {
-                      label: 'Manage Users',
+                      label: t('nav.manage_users'),
                       href: adminUsersIndex.url(),
                       icon: <Users className="size-4" />,
                       match: '/admin/users',
                   },
                   {
-                      label: 'Manage Requests',
+                      label: t('nav.manage_requests'),
                       href: adminRequestsIndex.url(),
                       icon: <ClipboardCheck className="size-4" />,
                       match: '/admin/requests',
@@ -127,6 +131,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         router.post(Logout.url());
     }
 
+    function setLocale(newLocale: string): void {
+        if (newLocale === locale) {
+            return;
+        }
+
+        router.post('/locale', { locale: newLocale }, { preserveScroll: true });
+    }
+
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
@@ -137,7 +149,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     >
                         <DoorOpen className="size-5" />
                         <span className="text-sm font-semibold tracking-tight">
-                            RoomBook
+                            {t('brand.name')}
                         </span>
                     </Link>
 
@@ -166,6 +178,46 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     </nav>
 
                     <div className="ml-auto flex items-center gap-1 sm:gap-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                render={
+                                    <Button
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="text-muted-foreground"
+                                        aria-label={t('common.language')}
+                                    >
+                                        <Languages className="size-4" />
+                                        <span className="sr-only">
+                                            {t('common.language')}
+                                        </span>
+                                    </Button>
+                                }
+                            ></DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" sideOffset={8}>
+                                <DropdownMenuGroup>
+                                    <DropdownMenuLabel>
+                                        {t('common.language')}
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    {availableLocales.map((availableLocale) => (
+                                        <DropdownMenuItem
+                                            key={availableLocale.code}
+                                            onClick={() =>
+                                                setLocale(availableLocale.code)
+                                            }
+                                        >
+                                            <span className="flex-1">
+                                                {availableLocale.name}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {availableLocale.code.toUpperCase()}
+                                            </span>
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         <NotificationModal />
                         <ThemeToggle />
                         <DropdownMenu>
@@ -201,7 +253,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                                 className="w-fit"
                                             >
                                                 <ShieldCheck className="size-3" />
-                                                {getRoleLabel(roles)}
+                                                {getRoleLabel(roles, t)}
                                             </Badge>
                                         </div>
                                     </DropdownMenuLabel>
@@ -213,7 +265,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                         onClick={logout}
                                     >
                                         <LogOut className="mr-1.5" />
-                                        Log out
+                                        {t('account.logout')}
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
@@ -232,17 +284,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                 }
                             >
                                 <Menu className="size-4" />
-                                <span className="sr-only">Open navigation</span>
+                                <span className="sr-only">
+                                    {t('mobile_nav.open')}
+                                </span>
                             </DialogTrigger>
                             <DialogContent
                                 className="max-w-sm p-0"
                                 showCloseButton={false}
                             >
                                 <DialogHeader className="border-b px-4 py-4">
-                                    <DialogTitle>Navigate</DialogTitle>
+                                    <DialogTitle>
+                                        {t('mobile_nav.title')}
+                                    </DialogTitle>
                                     <DialogDescription>
-                                        Quick access to the main sections of
-                                        RoomBook.
+                                        {t('mobile_nav.description')}
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-1 p-3">
