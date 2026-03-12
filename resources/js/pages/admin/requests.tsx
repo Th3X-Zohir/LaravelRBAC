@@ -190,17 +190,22 @@ export default function AdminRequests({
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col">
-                                                <span>
-                                                    {formatDate(request.date)}
+                                                <span className="text-sm">
+                                                    {formatDate(
+                                                        request.date,
+                                                        locale,
+                                                    )}
                                                 </span>
                                                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                                     <Clock className="size-3" />
                                                     {formatTime(
                                                         request.start_time,
+                                                        locale,
                                                     )}{' '}
                                                     -{' '}
                                                     {formatTime(
                                                         request.end_time,
+                                                        locale,
                                                     )}
                                                 </span>
                                             </div>
