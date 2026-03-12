@@ -44,12 +44,18 @@ class UserController extends Controller
         $newRole = $validated['role'];
 
         if ($currentRole === $newRole) {
-            return back()->with('success', "{$user->name} already has the {$newRole} role.");
+            return back()->with('success', __('app.flash.role_already_set', [
+                'name' => $user->name,
+                'role' => $newRole,
+            ]));
         }
 
         $user->syncRoles([$newRole]);
         $user->notify(new RoleChangedNotification($currentRole, $newRole));
 
-        return back()->with('success', "Role updated to {$newRole} for {$user->name}.");
+        return back()->with('success', __('app.flash.role_updated', [
+            'name' => $user->name,
+            'role' => $newRole,
+        ]));
     }
 }

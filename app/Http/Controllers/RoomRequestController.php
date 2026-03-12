@@ -67,7 +67,7 @@ class RoomRequestController extends Controller
         Notification::send($superadmins, new RoomRequestNotification($roomRequest, 'created'));
 
         return redirect()->route('requests.index')
-            ->with('success', 'Room request submitted successfully.');
+            ->with('success', __('app.flash.room_request_submitted'));
     }
 
     /**
@@ -77,7 +77,7 @@ class RoomRequestController extends Controller
     {
         $roomRequest->delete();
 
-        return back()->with('success', 'Room request cancelled.');
+        return back()->with('success', __('app.flash.room_request_cancelled'));
     }
 
     /**
@@ -124,7 +124,7 @@ class RoomRequestController extends Controller
         $approvedRequest->user->notify(new RoomRequestNotification($approvedRequest, 'approved'));
         $this->sendAutoRejectedNotifications($autoRejectedRequests);
 
-        return back()->with('success', 'Room request approved.');
+        return back()->with('success', __('app.flash.room_request_approved'));
     }
 
     /**
@@ -142,7 +142,7 @@ class RoomRequestController extends Controller
 
         $roomRequest->user->notify(new RoomRequestNotification($roomRequest, 'rejected'));
 
-        return back()->with('success', 'Room request rejected.');
+        return back()->with('success', __('app.flash.room_request_rejected'));
     }
 
     /**

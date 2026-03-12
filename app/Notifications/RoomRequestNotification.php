@@ -33,11 +33,16 @@ class RoomRequestNotification extends Notification implements ShouldQueue
     {
         $room = $this->roomRequest->room;
         $user = $this->roomRequest->user;
+        $date = $this->roomRequest->date->format('M d, Y');
 
         return match ($this->action) {
             'created' => [
-                'title' => 'New Room Request',
-                'message' => "{$user->name} requested room {$room->room_number} on {$this->roomRequest->date->format('M d, Y')}.",
+                'title' => __('app.notifications.new_request_title'),
+                'message' => __('app.notifications.new_request_message', [
+                    'user' => $user->name,
+                    'room' => $room->room_number,
+                    'date' => $date,
+                ]),
                 'type' => 'info',
                 'action' => 'created',
                 'audience' => 'admin',
@@ -45,8 +50,11 @@ class RoomRequestNotification extends Notification implements ShouldQueue
                 'url' => route('admin.requests.show', $this->roomRequest),
             ],
             'approved' => [
-                'title' => 'Room Request Approved',
-                'message' => "Your request for room {$room->room_number} on {$this->roomRequest->date->format('M d, Y')} has been approved.",
+                'title' => __('app.notifications.approved_title'),
+                'message' => __('app.notifications.approved_message', [
+                    'room' => $room->room_number,
+                    'date' => $date,
+                ]),
                 'type' => 'approved',
                 'action' => 'approved',
                 'audience' => 'requester',
@@ -54,8 +62,11 @@ class RoomRequestNotification extends Notification implements ShouldQueue
                 'url' => route('requests.show', $this->roomRequest),
             ],
             'rejected' => [
-                'title' => 'Room Request Rejected',
-                'message' => "Your request for room {$room->room_number} on {$this->roomRequest->date->format('M d, Y')} has been rejected.",
+                'title' => __('app.notifications.rejected_title'),
+                'message' => __('app.notifications.rejected_message', [
+                    'room' => $room->room_number,
+                    'date' => $date,
+                ]),
                 'type' => 'rejected',
                 'action' => 'rejected',
                 'audience' => 'requester',
@@ -63,8 +74,10 @@ class RoomRequestNotification extends Notification implements ShouldQueue
                 'url' => route('requests.show', $this->roomRequest),
             ],
             default => [
-                'title' => 'Room Request Update',
-                'message' => "Room request for {$room->room_number} has been updated.",
+                'title' => __('app.notifications.updated_title'),
+                'message' => __('app.notifications.updated_message', [
+                    'room' => $room->room_number,
+                ]),
                 'type' => 'info',
                 'action' => 'updated',
                 'audience' => 'requester',
