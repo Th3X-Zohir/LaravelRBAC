@@ -99,11 +99,27 @@ class NotificationData
             return self::formatDate($value);
         }
 
+        if ($key === 'room') {
+            return self::localizeNumber($value);
+        }
+
         if ($key === 'previous_role' || $key === 'new_role') {
             return __("app.roles.{$value}");
         }
 
         return $value;
+    }
+
+    private static function localizeNumber(string|int $value): string
+    {
+        if (app()->getLocale() !== 'bn') {
+            return (string) $value;
+        }
+
+        $westernArabic = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        $bengali = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+
+        return str_replace($westernArabic, $bengali, (string) $value);
     }
 
     private static function formatDate(string $value): string
