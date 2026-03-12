@@ -25,6 +25,8 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { useI18n } from '@/lib/i18n';
+import { localizeDigits } from '@/lib/utils';
 import type { NotificationItem, Notifications } from '@/types';
 
 const typeConfig = {
@@ -101,6 +103,7 @@ function NotificationRow({
     notification: NotificationItem;
     onVisit: () => void;
 }) {
+    const { locale } = useI18n();
     const config = typeConfig[notification.type] ?? typeConfig.info;
     const Icon = config.icon;
 
@@ -132,7 +135,7 @@ function NotificationRow({
                     {notification.message}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground/70">
-                    {notification.time}
+                    {localizeDigits(notification.time, locale)}
                 </p>
             </div>
         </Link>
@@ -143,6 +146,7 @@ export default function NotificationModal() {
     const { notifications: sharedNotifications } = usePage<{
         notifications: Notifications;
     }>().props;
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [isMarkingAllAsRead, setIsMarkingAllAsRead] = useState(false);
 
@@ -197,7 +201,9 @@ export default function NotificationModal() {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger className="relative flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
                 <Bell className="size-4" />
-                <span className="hidden sm:inline">Notifications</span>
+                <span className="hidden sm:inline">
+                    {t('notifications.modal_title')}
+                </span>
                 {unreadCount > 0 && (
                     <Badge
                         variant="destructive"
@@ -210,7 +216,9 @@ export default function NotificationModal() {
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <div className="flex items-center justify-between pr-6">
-                        <DialogTitle>Notifications</DialogTitle>
+                        <DialogTitle>
+                            {t('notifications.modal_title')}
+                        </DialogTitle>
                         {unreadCount > 0 && (
                             <Button
                                 variant="ghost"
@@ -219,14 +227,15 @@ export default function NotificationModal() {
                                 disabled={isMarkingAllAsRead}
                             >
                                 <CheckCheck className="mr-1 size-3.5" />
-                                Mark all read
+                                {t('notifications.mark_all_read')}
                             </Button>
                         )}
                     </div>
                     {unreadCount > 0 && (
                         <p className="text-sm text-muted-foreground">
-                            {unreadCount} unread notification
-                            {unreadCount > 1 ? 's' : ''}
+                            {t('notifications.unread_count', {
+                                count: unreadCount,
+                            })}
                         </p>
                     )}
                 </DialogHeader>
@@ -236,10 +245,10 @@ export default function NotificationModal() {
                         <div className="flex flex-col items-center gap-2 py-8 text-center">
                             <BellOff className="size-8 text-muted-foreground" />
                             <p className="text-sm font-medium">
-                                No notifications
+                                {t('notifications.empty_title')}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                We'll notify you when something happens.
+                                {t('notifications.empty_desc')}
                             </p>
                         </div>
                     ) : (

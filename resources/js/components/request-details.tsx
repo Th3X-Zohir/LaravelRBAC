@@ -28,7 +28,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { formatDate, formatDateTime, formatTime } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
+import { formatDate, formatDateTime, formatTime, localizeDigits } from '@/lib/utils';
 
 type RequestDetails = {
     id: number;
@@ -62,21 +63,24 @@ export type RequestDetailsProps = {
 };
 
 const statusConfig = {
-    pending: { variant: 'secondary' as const, label: 'Pending' },
-    approved: { variant: 'default' as const, label: 'Approved' },
-    rejected: { variant: 'destructive' as const, label: 'Rejected' },
+    pending: { variant: 'secondary' as const, labelKey: 'status.pending' },
+    approved: { variant: 'default' as const, labelKey: 'status.approved' },
+    rejected: { variant: 'destructive' as const, labelKey: 'status.rejected' },
 };
 
 export default function RequestDetails({
     roomRequest,
     viewer,
 }: RequestDetailsProps) {
+    const { t, locale } = useI18n();
     const reviewSummary =
         roomRequest.reviewer !== null
-            ? `Reviewed by ${roomRequest.reviewer.name}`
+            ? t('request_details.reviewed_by', {
+                  name: roomRequest.reviewer.name,
+              })
             : roomRequest.status === 'rejected'
-              ? 'Automatically expired after the requested date passed.'
-              : 'Awaiting review from a superadmin.';
+              ? t('request_details.auto_expired')
+              : t('request_details.awaiting_review');
 
     function approveRequest(): void {
         router.patch(approve.url(roomRequest.id), undefined, {
@@ -111,19 +115,19 @@ export default function RequestDetails({
                         className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                         <ArrowLeft className="size-4" />
-                        Back to{' '}
-                        {viewer === 'admin' ? 'manage requests' : 'my requests'}
+                        {viewer === 'admin'
+                            ? t('request_details.back_admin')
+                            : t('request_details.back_user')}
                     </Link>
                     <h1 className="text-xl font-semibold tracking-tight">
-                        Request #{roomRequest.id}
+                        {t('request_details.title', { id: roomRequest.id })}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Review the request timeline, room details, and current
-                        approval state.
+                        {t('request_details.subtitle')}
                     </p>
                 </div>
                 <Badge variant={statusConfig[roomRequest.status].variant}>
-                    {statusConfig[roomRequest.status].label}
+                    {t(statusConfig[roomRequest.status].labelKey)}
                 </Badge>
             </div>
 
@@ -133,7 +137,11 @@ export default function RequestDetails({
                         <CardTitle>Request Details</CardTitle>
                         <CardDescription>
                             Complete booking context for room{' '}
-                            {roomRequest.room.room_number}.
+                            {localizeDigits(
+                                roomRequest.room.room_number,
+                                locale,
+                            )}
+                            .
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -143,7 +151,10 @@ export default function RequestDetails({
                                 Room
                             </div>
                             <p className="mt-3 text-lg font-semibold">
-                                {roomRequest.room.room_number}
+                                {localizeDigits(
+                                    roomRequest.room.room_number,
+                                    locale,
+                                )}
                             </p>
                             <p className="text-sm text-muted-foreground capitalize">
                                 {roomRequest.room.status}
@@ -156,11 +167,11 @@ export default function RequestDetails({
                                 Schedule
                             </div>
                             <p className="mt-3 text-lg font-semibold">
-                                {formatDate(roomRequest.date)}
+                                {formatDate(roomRequest.date, locale)}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                                {formatTime(roomRequest.start_time)} -{' '}
-                                {formatTime(roomRequest.end_time)}
+                                {formatTime(roomRequest.start_time, locale)} -{' '}
+                                {formatTime(roomRequest.end_time, locale)}
                             </p>
                         </div>
 
@@ -176,7 +187,8 @@ export default function RequestDetails({
                     </CardContent>
                     <CardFooter className="flex flex-wrap justify-between gap-3">
                         <div className="text-xs text-muted-foreground">
-                            Submitted on {formatDateTime(roomRequest.created_at)}
+                            Submitted on{' '}
+                            {formatDateTime(roomRequest.created_at, locale)}
                         </div>
                         <Link
                             href={detailsHref}
@@ -205,13 +217,13 @@ export default function RequestDetails({
 
                     <Card size="sm">
                         <CardHeader>
-                            <CardTitle>Review Status</CardTitle>
+                            <CardTitle>{t('request_details.review_status')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm">
                             <p className="text-muted-foreground">{reviewSummary}</p>
                             {roomRequest.reviewed_at ? (
                                 <p className="text-muted-foreground">
-                                    {formatDateTime(roomRequest.reviewed_at)}
+                                    {formatDateTime(roomRequest.reviewed_at, locale)}
                                 </p>
                             ) : null}
                         </CardContent>
@@ -219,7 +231,7 @@ export default function RequestDetails({
 
                     <Card size="sm">
                         <CardHeader>
-                            <CardTitle>Actions</CardTitle>
+                            <CardTitle>{t('request_details.actions')}</CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-2">
                             {viewer === 'admin' &&
@@ -227,14 +239,14 @@ export default function RequestDetails({
                                 <>
                                     <Button onClick={approveRequest}>
                                         <CheckCircle2 className="size-3.5" />
-                                        Approve request
+                                        {t('request_details.approve_request')}
                                     </Button>
                                     <Button
                                         variant="destructive"
                                         onClick={rejectRequest}
                                     >
                                         <XCircle className="size-3.5" />
-                                        Reject request
+                                        {t('request_details.reject_request')}
                                     </Button>
                                 </>
                             ) : null}
@@ -246,13 +258,13 @@ export default function RequestDetails({
                                     onClick={cancelRequest}
                                 >
                                     <XCircle className="size-3.5" />
-                                    Cancel request
+                                    {t('request_details.cancel_request')}
                                 </Button>
                             ) : null}
 
                             {roomRequest.status !== 'pending' ? (
                                 <p className="text-sm text-muted-foreground">
-                                    This request has already been reviewed.
+                                    {t('request_details.already_reviewed')}
                                 </p>
                             ) : null}
                         </CardContent>
