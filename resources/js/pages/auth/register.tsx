@@ -15,8 +15,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import GuestLayout from '@/layouts/guest-layout';
+import { useI18n } from '@/lib/i18n';
 
 export default function Register() {
+    const { t } = useI18n();
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
@@ -31,7 +33,7 @@ export default function Register() {
 
     return (
         <GuestLayout>
-            <Head title="Create account" />
+            <Head title={t('auth.create_account')} />
 
             <div className="flex flex-col gap-6">
                 {/* Logo / Brand header */}
@@ -40,29 +42,29 @@ export default function Register() {
                         <DoorOpen className="size-5 text-background" />
                     </div>
                     <h1 className="text-lg font-semibold tracking-tight">
-                        Create your account
+                        {t('auth.create_your_account')}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Get started with RoomBook
+                        {t('auth.get_started')}
                     </p>
                 </div>
 
                 <Card>
                     <CardHeader className="sr-only">
-                        <CardTitle>Register</CardTitle>
+                        <CardTitle>{t('auth.register')}</CardTitle>
                         <CardDescription>
-                            Fill in your details to create a new account
+                            {t('auth.register_hint')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={submit} className="flex flex-col gap-4">
                             {/* Name */}
                             <div className="flex flex-col gap-1.5">
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="name">{t('auth.name')}</Label>
                                 <Input
                                     id="name"
                                     type="text"
-                                    placeholder="Your full name"
+                                    placeholder={t('auth.name_placeholder')}
                                     value={data.name}
                                     onChange={(e) =>
                                         setData('name', e.target.value)
@@ -79,11 +81,11 @@ export default function Register() {
 
                             {/* Email */}
                             <div className="flex flex-col gap-1.5">
-                                <Label htmlFor="email">Email</Label>
+                                <Label htmlFor="email">{t('auth.email')}</Label>
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="you@diu.edu.bd"
+                                    placeholder={t('auth.email_placeholder')}
                                     value={data.email}
                                     onChange={(e) =>
                                         setData('email', e.target.value)
@@ -91,8 +93,7 @@ export default function Register() {
                                     autoComplete="email"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Registration is limited to DIU email
-                                    addresses.
+                                    {t('auth.diu_email_hint')}
                                 </p>
                                 {errors.email && (
                                     <p className="text-xs text-destructive">
@@ -103,11 +104,15 @@ export default function Register() {
 
                             {/* Password */}
                             <div className="flex flex-col gap-1.5">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password">
+                                    {t('auth.password')}
+                                </Label>
                                 <Input
                                     id="password"
                                     type="password"
-                                    placeholder="Create a password"
+                                    placeholder={t(
+                                        'auth.password_create_placeholder',
+                                    )}
                                     value={data.password}
                                     onChange={(e) =>
                                         setData('password', e.target.value)
@@ -124,12 +129,14 @@ export default function Register() {
                             {/* Confirm Password */}
                             <div className="flex flex-col gap-1.5">
                                 <Label htmlFor="password_confirmation">
-                                    Confirm Password
+                                    {t('auth.confirm_password')}
                                 </Label>
                                 <Input
                                     id="password_confirmation"
                                     type="password"
-                                    placeholder="Confirm your password"
+                                    placeholder={t(
+                                        'auth.confirm_password_placeholder',
+                                    )}
                                     value={data.password_confirmation}
                                     onChange={(e) =>
                                         setData(
@@ -153,8 +160,8 @@ export default function Register() {
                                 disabled={processing}
                             >
                                 {processing
-                                    ? 'Creating account...'
-                                    : 'Create account'}
+                                    ? t('auth.creating_account')
+                                    : t('auth.create_account')}
                             </Button>
                         </form>
                     </CardContent>
@@ -162,12 +169,12 @@ export default function Register() {
 
                 {/* Login link */}
                 <p className="text-center text-sm text-muted-foreground">
-                    Already have an account?{' '}
+                    {t('auth.already_have_account')}{' '}
                     <Link
                         href={loginShow.url()}
                         className="font-medium text-foreground underline-offset-4 hover:underline"
                     >
-                        Sign in
+                        {t('auth.sign_in')}
                     </Link>
                 </p>
             </div>
