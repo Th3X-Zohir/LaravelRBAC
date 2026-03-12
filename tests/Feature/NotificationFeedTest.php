@@ -3,6 +3,7 @@
 use App\Models\RoomRequest;
 use App\Models\User;
 use App\Notifications\RoomRequestNotification;
+use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -10,11 +11,19 @@ beforeEach(function () {
     $this->seed(RoleSeeder::class);
 });
 
+afterEach(function () {
+    Carbon::setTestNow();
+});
+
 it('returns the notification feed payload from the dedicated endpoint', function () {
+    Carbon::setTestNow('2026-03-12 09:00:00');
+
     $requester = User::factory()->create();
     $requester->assignRole('cr');
 
-    $roomRequest = RoomRequest::factory()->for($requester)->approved()->create();
+    $roomRequest = RoomRequest::factory()->for($requester)->approved()->create([
+        'date' => '2026-03-12',
+    ]);
 
     $requester->notifyNow(new RoomRequestNotification($roomRequest, 'approved'));
     $notification = $requester->notifications()->sole();
@@ -26,10 +35,44 @@ it('returns the notification feed payload from the dedicated endpoint', function
         ->assertJsonPath('unreadCount', 1)
         ->assertJsonCount(1, 'items')
         ->assertJsonPath('items.0.id', $notification->id)
-        ->assertJsonPath('items.0.title', $notification->data['title'])
-        ->assertJsonPath('items.0.message', $notification->data['message'])
+        ->assertJsonPath('items.0.title', __('app.notifications.approved_title'))
+        ->assertJsonPath('items.0.message', __('app.notifications.approved_message', [
+            'room' => $roomRequest->room->room_number,
+            'date' => 'Mar 12, 2026',
+        ]))
         ->assertJsonPath('items.0.read', false)
         ->assertJsonPath('items.0.visit_url', route('notifications.visit', $notification->id));
+});
+
+it('localizes the same notification payload using the current session locale', function () {
+    Carbon::setTestNow('2026-03-12 09:00:00');
+
+    $requester = User::factory()->create();
+    $requester->assignRole('cr');
+
+    $roomRequest = RoomRequest::factory()->for($requester)->approved()->create([
+        'date' => '2026-03-12',
+    ]);
+
+    $requester->notifyNow(new RoomRequestNotification($roomRequest, 'approved'));
+
+    $englishResponse = $this->actingAs($requester)
+        ->withSession(['locale' => 'en'])
+        ->getJson(route('notifications.index'));
+
+    $banglaResponse = $this->actingAs($requester)
+        ->withSession(['locale' => 'bn'])
+        ->getJson(route('notifications.index'));
+
+    $englishResponse
+        ->assertOk()
+        ->assertJsonPath('items.0.title', 'Room Request Approved')
+        ->assertJsonPath('items.0.message', 'Your request for room '.$roomRequest->room->room_number.' on Mar 12, 2026 has been approved.');
+
+    $banglaResponse
+        ->assertOk()
+        ->assertJsonPath('items.0.title', 'রুম অনুরোধ অনুমোদিত')
+        ->assertJsonPath('items.0.message', 'মার্চ ১২, ২০২৬ তারিখে '.$roomRequest->room->room_number.' রুমের জন্য আপনার অনুরোধটি অনুমোদিত হয়েছে।');
 });
 
 it('shares the same notifications payload with inertia pages', function () {
