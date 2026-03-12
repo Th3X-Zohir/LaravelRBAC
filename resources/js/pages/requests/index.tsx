@@ -209,7 +209,7 @@ export default function Requests({
                                                 {t('requests.table_room')}
                                             </TableHead>
                                             <TableHead>
-                                                {t('requests.table_date_time')}
+                                                {t('requests.table_schedule')}
                                             </TableHead>
                                             <TableHead>
                                                 {t('requests.table_purpose')}
@@ -283,7 +283,10 @@ export default function Requests({
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-sm text-muted-foreground">
-                                                    {getReviewerLabel(request, t)}
+                                                    {getReviewerLabel(
+                                                        request,
+                                                        t,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">
                                                     {formatDateTime(
@@ -310,7 +313,9 @@ export default function Requests({
                                                                 }
                                                             >
                                                                 <ExternalLink className="size-3.5" />
-                                                                {t('common.view')}
+                                                                {t(
+                                                                    'common.view',
+                                                                )}
                                                             </Button>
                                                             <Button
                                                                 variant="destructive"
@@ -322,7 +327,9 @@ export default function Requests({
                                                                 }
                                                             >
                                                                 <XCircle className="size-3.5" />
-                                                                {t('common.cancel')}
+                                                                {t(
+                                                                    'common.cancel',
+                                                                )}
                                                             </Button>
                                                         </div>
                                                     ) : (
