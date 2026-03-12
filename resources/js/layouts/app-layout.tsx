@@ -3,7 +3,6 @@ import {
     CalendarCheck,
     ClipboardCheck,
     DoorOpen,
-    Languages,
     LayoutDashboard,
     LogOut,
     Menu,
@@ -17,6 +16,7 @@ import { index as adminUsersIndex } from '@/actions/App/Http/Controllers/Admin/U
 import Logout from '@/actions/App/Http/Controllers/Auth/LogoutController';
 import { index as dashboard } from '@/actions/App/Http/Controllers/DashboardController';
 import { index as roomsIndex } from '@/actions/App/Http/Controllers/RoomController';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import {
     adminIndex as adminRequestsIndex,
     index as requestsIndex,
@@ -76,8 +76,7 @@ function getRoleLabel(roles: string[], t: (key: string) => string): string {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const { auth, url } = usePage<{ auth: Auth; url: string }>().props;
-    const { t, locale, availableLocales } = useI18n();
-    console.log('🚀 ~ AppLayout ~ availableLocales:', availableLocales);
+    const { t } = useI18n();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const user = auth.user;
 
@@ -131,14 +130,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         router.post(Logout.url());
     }
 
-    function setLocale(newLocale: string): void {
-        if (newLocale === locale) {
-            return;
-        }
-
-        router.post('/locale', { locale: newLocale }, { preserveScroll: true });
-    }
-
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
@@ -178,46 +169,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     </nav>
 
                     <div className="ml-auto flex items-center gap-1 sm:gap-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        className="text-muted-foreground"
-                                        aria-label={t('common.language')}
-                                    >
-                                        <Languages className="size-4" />
-                                        <span className="sr-only">
-                                            {t('common.language')}
-                                        </span>
-                                    </Button>
-                                }
-                            ></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" sideOffset={8}>
-                                <DropdownMenuGroup>
-                                    <DropdownMenuLabel>
-                                        {t('common.language')}
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    {availableLocales.map((availableLocale) => (
-                                        <DropdownMenuItem
-                                            key={availableLocale.code}
-                                            onClick={() =>
-                                                setLocale(availableLocale.code)
-                                            }
-                                        >
-                                            <span className="flex-1">
-                                                {availableLocale.name}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {availableLocale.code.toUpperCase()}
-                                            </span>
-                                        </DropdownMenuItem>
-                                    ))}
-                                </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <LanguageSwitcher />
                         <NotificationModal />
                         <ThemeToggle />
                         <DropdownMenu>
