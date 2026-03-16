@@ -9,6 +9,9 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomRequestController;
+use App\Http\Controllers\SslCommerzPaymentController;
+use App\Http\Controllers\SubscriptionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // ── Guest (auth) routes ─────────────────────────────────────────
@@ -24,6 +27,19 @@ Route::post('/locale', LocaleController::class)->name('locale.update');
 
 Route::redirect('/', '/rooms');
 
+Route::prefix('subscribe')->group(function (): void {
+    Route::middleware(['auth', 'redirect_if_subscribed'])->group(function (): void {
+        Route::get('/', [SubscriptionController::class, 'view'])->name('subscribe');
+        Route::post('/', [SubscriptionController::class, 'subscribe'])->name('subscribe.store');
+    });
+
+    Route::post('/success', [SubscriptionController::class, 'success'])->name('subscribe.success');
+    Route::post('/fail', [SubscriptionController::class, 'fail'])->name('subscribe.fail');
+    Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('subscribe.cancel');
+
+    Route::post('/ipn', [SubscriptionController::class, 'ipn']);
+});
+
 // Public: browse room availability (no auth required)
 Route::prefix('rooms')->name('rooms.')->group(function (): void {
     Route::get('/', [RoomController::class, 'index'])->name('index');
@@ -32,7 +48,7 @@ Route::prefix('rooms')->name('rooms.')->group(function (): void {
 });
 
 // ── Authenticated routes ────────────────────────────────────────
-Route::middleware('auth')->group(function (): void {
+Route::middleware(['auth', 'subscribed'])->group(function (): void {
     Route::post('/logout', LogoutController::class)->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/requests', [RoomRequestController::class, 'index'])->name('requests.index');
@@ -59,3 +75,16 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/requests/{roomRequest}/reject', [RoomRequestController::class, 'reject'])->name('requests.reject');
     });
 });
+
+// Route::get('/example1', [SslCommerzPaymentController::class, 'exampleEasyCheckout']);
+// Route::get('/example2', [SslCommerzPaymentController::class, 'exampleHostedCheckout']);
+
+// Route::post('/pay', [SslCommerzPaymentController::class, 'index']);
+// Route::post('/pay-via-ajax', [SslCommerzPaymentController::class, 'payViaAjax']);
+
+// // Route::post('/success', [SslCommerzPaymentController::class, 'success']);
+// Route::post('/success', fn (Request $request) => dd($request->all()));
+// Route::post('/fail', [SslCommerzPaymentController::class, 'fail']);
+// Route::post('/cancel', [SslCommerzPaymentController::class, 'cancel']);
+
+// Route::post('/ipn', [SslCommerzPaymentController::class, 'ipn']);

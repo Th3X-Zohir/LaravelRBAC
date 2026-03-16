@@ -15,9 +15,11 @@
         "laravel/reverb": "*",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.11",
+        "laravelcm/laravel-subscriptions": "^1.7",
         "spatie/laravel-permission": "^7.2"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.6",
         "fakerphp/faker": "^1.23",
         "laravel/boost": "^2.0",
         "laravel/pail": "^1.2.2",

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureSubscription;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -21,10 +22,19 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            '/subscribe/success',
+            '/subscribe/cancel',
+            '/subscribe/fail',
+            '/subscribe/ipn',
+        ]);
+
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'subscribed' => EnsureSubscription::class,
+            'redirect_if_subscribed' => \App\Http\Middleware\RedirectIfSubscribed::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -39,5 +39,7 @@ class DatabaseSeeder extends Seeder
         $user->assignRole('authenticated');
 
         $this->call(RoomSeeder::class);
+
+        $this->call(PlanSeeder::class);
     }
 }
