@@ -9,10 +9,9 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomRequestController;
-use App\Http\Controllers\SslCommerzPaymentController;
 use App\Http\Controllers\SubscriptionController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // ── Guest (auth) routes ─────────────────────────────────────────
 Route::middleware('guest')->group(function (): void {
@@ -33,9 +32,14 @@ Route::prefix('subscribe')->group(function (): void {
         Route::post('/', [SubscriptionController::class, 'subscribe'])->name('subscribe.store');
     });
 
-    Route::post('/success', [SubscriptionController::class, 'success'])->name('subscribe.success');
-    Route::post('/fail', [SubscriptionController::class, 'fail'])->name('subscribe.fail');
-    Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('subscribe.cancel');
+    Route::get('/success', fn() => Inertia::render('subscribe/success'))->name('subscribe.success');
+    Route::post('/success', [SubscriptionController::class, 'success']);
+
+    Route::get('/fail', fn() => Inertia::render('subscribe/failed'))->name('subscribe.fail');
+    Route::post('/fail', [SubscriptionController::class, 'fail']);
+
+    Route::get('/cancel', fn() => Inertia::render('subscribe/cancel'))->name('subscribe.cancel');
+    Route::post('/cancel', [SubscriptionController::class, 'cancel']);
 
     Route::post('/ipn', [SubscriptionController::class, 'ipn']);
 });

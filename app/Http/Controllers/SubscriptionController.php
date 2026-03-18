@@ -5,15 +5,23 @@ namespace App\Http\Controllers;
 use App\Library\SslCommerz\SslCommerzNotification;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravelcm\Subscriptions\Models\Plan;
 
 class SubscriptionController extends Controller
 {
+    private $gateway;
+
+    public function __construct()
+    {
+        $this->gateway = new SslCommerzNotification();
+    }
+
     public function view(): Response
     {
-        $plan = Plan::first();
+        $plan = Plan::firstOrFail();
 
         return Inertia::render('subscribe/index', [
             'plan' => $plan,
@@ -25,11 +33,7 @@ class SubscriptionController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->planSubscription('main')) {
-            return redirect()->route('dashboard');
-        }
-
-        $plan = Plan::first();
+        $plan = Plan::firstOrFail();
 
         $transaction = Transaction::create([
             'user_id' => $user->id,
@@ -53,51 +57,47 @@ class SubscriptionController extends Controller
             'product_profile' => 'physical-goods',
         ];
 
-        $sslc = new SslCommerzNotification;
-        $payment_options = $sslc->makePayment($data, 'hosted');
-
-        dd($payment_options);
-
-        if (! is_array($payment_options)) {
-            print_r($payment_options);
-            $payment_options = [];
-        }
+        $this->gateway->makePayment($data, 'hosted');
     }
 
     public function success(Request $request)
     {
-        $tran_id = $request->input('tran_id');
-        $amount = $request->input('amount');
-        $currency = $request->input('currency');
+        $validator = Validator::make($request->all(), [
+            'tran_id' => 'required',
+            'amount' => 'required',
+            'currency' => 'required|max:3'
+        ]);
 
-        $transaction = Transaction::find($tran_id);
-        if (! $transaction) {
-            return Inertia::render('subscribe/failed');
+        if ($validator->fails()) {
+            return redirect()->route('subscribe.fail');
         }
+
+        $validated = $validator->validated();
+
+        $transaction = Transaction::findOrFail($validated['tran_id']);
 
         if ($transaction->status != 'pending') {
-            return Inertia::render('subscribe/success');
+            return redirect()->route('subscribe.success');
         }
 
-        $sslc = new SslCommerzNotification;
-        $validation = $sslc->orderValidate($request->all(), $tran_id, $amount, $currency);
-        if (! $validation) {
-            return Inertia::render('subscribe/failed');
+        $validation = $this->gateway->orderValidate($request->all(), $validated['tran_id'], $validated['amount'], $validated['amount']);
+        if ($validation) {
+            $transaction->status = 'completed';
+            $transaction->save();
         }
 
-        $transaction->status = 'completed';
-        $transaction->save();
-
-        return Inertia::render('subscribe/success');
+        return redirect()->route('subscribe.success');
     }
 
     public function fail(Request $request)
     {
-        $tran_id = $request->input('tran_id');
+        $validated = $request->validate([
+            'tran_id' => 'required',
+        ]);
 
-        $transaction = Transaction::find($tran_id);
+        $transaction = Transaction::findOrFail($validated['tran_id']);
 
-        abort_if(! $transaction, 404);
+        abort_if(!$transaction, 404);
 
         if ($transaction->status != 'pending') {
             return redirect()->route('subscribe.fail');
@@ -106,16 +106,18 @@ class SubscriptionController extends Controller
         $transaction->status = 'failed';
         $transaction->save();
 
-        return Inertia::render('subscribe/failed');
+        return redirect()->route('subscribe.fail');
     }
 
     public function cancel(Request $request)
     {
-        $tran_id = $request->input('tran_id');
+        $validated = $request->validate([
+            'tran_id' => 'required',
+        ]);
 
-        $transaction = Transaction::find($tran_id);
+        $transaction = Transaction::findOrFail($validated['tran_id']);
 
-        abort_if(! $transaction, 404);
+        abort_if(!$transaction, 404);
 
         if ($transaction->status != 'pending') {
             return redirect()->route('dashboard');
@@ -124,43 +126,43 @@ class SubscriptionController extends Controller
         $transaction->status = 'failed';
         $transaction->save();
 
-        return Inertia::render('subscribe/cancel');
+        return redirect()->route('subscribe.fail');
     }
 
     public function ipn(Request $request)
     {
-        if (! $request->input('tran_id')) {
-            echo 'Transaction ID is missing';
+        $validator = Validator::make($request->all(), [
+            'tran_id' => 'required',
+            'amount' => 'required',
+            'currency' => 'required|max:3'
+        ]);
 
-            return;
+        if ($validator->fails()) {
+            return redirect()->route('subscribe.fail');
         }
 
-        $tran_id = $request->input('tran_id');
-        $transaction = Transaction::find($tran_id);
+        $validated = $validator->validated();
 
-        if (! $transaction) {
-            echo 'Transaction not found';
-
-            return;
-        }
+        $transaction = Transaction::findOrFail($validated['tran_id']);
 
         if ($transaction->status != 'pending') {
-            echo 'Transaction already processed';
+            logger('Transaction already processed');
 
-            return;
+            return "Transaction already processed";
         }
 
-        $sslc = new SslCommerzNotification;
-        $validation = $sslc->orderValidate($request->all(), $tran_id, $transaction->amount, $transaction->currency);
+        $validation = $this->gateway->orderValidate($request->all(), $validated['tran_id'], $transaction->amount, $transaction->currency);
 
-        if (! $validation) {
-            echo 'Transaction verification failed';
-
-            return;
+        if (!$validation) {
+            logger('Transaction verification failed');
+            $transaction->status = 'failed';
+        } else {
+            $transaction->status = 'completed';
         }
 
-        $transaction->status = 'completed';
         $transaction->save();
-        echo 'Transaction completed successfully';
+
+        logger('Transaction completed successfully');
+        return "OK";
     }
 }
